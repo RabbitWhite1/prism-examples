@@ -1,1 +1,4 @@
-Pmax=? [ F n0_log_ts_0!=INVALID | n0_log_ts_1!=INVALID]
+Pmax=? [ F n0_log_ts_0!=INVALID]
+Pmin=? [ F n0_log_ts_0!=INVALID]
+Pmax=? [ F n1_log_ts_0!=INVALID]
+Pmin=? [ F n1_log_ts_0!=INVALID]
