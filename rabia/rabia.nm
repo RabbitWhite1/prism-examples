@@ -9,7 +9,7 @@ const BUF_SIZE = 2;
 const MAX_TS = 2;
 const QUEUE_SIZE = 2;
 const LOG_SIZE = 5;
-const MAX_ROUND = 3;
+const MAX_ROUND = 2;
 
 const p0_bc_cmd_stage = 0;
 const p1_stage = 1;
@@ -23,8 +23,11 @@ const cmd_state = 2;
 const cmd_vote = 3;
 const NUM_CMD_TYPES = 4;
 
-const INVALID=-2;
+const INVALID=-3;
 const BOT = -1;
+const QUES_VOTE = -2;
+
+const MIN_TS_VALUE=-3;
 
 
 module wire01
@@ -33,13 +36,13 @@ module wire01
     w01_pkt_type_0 : [0..NUM_CMD_TYPES] init 0;
     w01_pkt_seq_0 : [0..LOG_SIZE] init 0;
     w01_pkt_round_0 : [0..MAX_ROUND] init 0;
-    w01_pkt_cmd_ts_0 : [-2..MAX_TS] init 0;
+    w01_pkt_cmd_ts_0 : [MIN_TS_VALUE..MAX_TS] init 0;
     // pkt slot 1
     w01_pkt_valid_1 : bool init false;
     w01_pkt_type_1 : [0..NUM_CMD_TYPES] init 0;
     w01_pkt_seq_1 : [0..LOG_SIZE] init 0;
     w01_pkt_round_1 : [0..MAX_ROUND] init 0;
-    w01_pkt_cmd_ts_1 : [-2..MAX_TS] init 0;
+    w01_pkt_cmd_ts_1 : [MIN_TS_VALUE..MAX_TS] init 0;
     [n0_send_broadcast] n0_send_ready=true & n0_send_is_broadcast=true & w01_pkt_valid_0=false ->         (w01_pkt_valid_0'=true) & (w01_pkt_type_0'=n0_send_type) & (w01_pkt_seq_0'=n0_send_seq) & (w01_pkt_round_0'=n0_send_round) & (w01_pkt_cmd_ts_0'=n0_send_cmd_ts);
     [send_01_0] n0_send_ready=true & n0_send_is_broadcast=false & w01_pkt_valid_0 = false & n0_send_ready=true ->         (w01_pkt_valid_0'=true) & (w01_pkt_type_0'=n0_send_type) & (w01_pkt_seq_0'=n0_send_seq) & (w01_pkt_round_0'=n0_send_round) & (w01_pkt_cmd_ts_0'=n0_send_cmd_ts);
     [recv_01_0] n0_recv_ready=false & w01_pkt_valid_0 = true -> (w01_pkt_valid_0'=false);
@@ -54,66 +57,66 @@ module node0
 	n0_stage : [0..5] init p0_bc_cmd_stage;
     /// p1 stage
     n0_seq : [0..LOG_SIZE] init 0;
-    n0_pq_valid_0 : bool init false;
-    n0_pq_ts_0 : [0..MAX_TS] init 0;
+    n0_pq_valid_0 : bool init true;
+    n0_pq_ts_0 : [0..MAX_TS] init 1;
     n0_pq_valid_1 : bool init false;
     n0_pq_ts_1 : [0..MAX_TS] init 0;
-    n0_log_ts_0 : [-2..LOG_SIZE] init INVALID; 
-    n0_log_ts_1 : [-2..LOG_SIZE] init INVALID; 
-    n0_log_ts_2 : [-2..LOG_SIZE] init INVALID; 
-    n0_log_ts_3 : [-2..LOG_SIZE] init INVALID; 
-    n0_log_ts_4 : [-2..LOG_SIZE] init INVALID; 
+    n0_log_ts_0 : [MIN_TS_VALUE..LOG_SIZE] init INVALID; 
+    n0_log_ts_1 : [MIN_TS_VALUE..LOG_SIZE] init INVALID; 
+    n0_log_ts_2 : [MIN_TS_VALUE..LOG_SIZE] init INVALID; 
+    n0_log_ts_3 : [MIN_TS_VALUE..LOG_SIZE] init INVALID; 
+    n0_log_ts_4 : [MIN_TS_VALUE..LOG_SIZE] init INVALID; 
     /// p2 stage
     n0_round_0 : [0..MAX_ROUND] init 0; 
     n0_my_proposal_0 : [0..MAX_TS] init 0;
-    n0_state_ts_0 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_0 : [-2..MAX_TS] init INVALID;
+    n0_state_ts_0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
     n0_round_1 : [0..MAX_ROUND] init 0; 
     n0_my_proposal_1 : [0..MAX_TS] init 0;
-    n0_state_ts_1 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_1 : [-2..MAX_TS] init INVALID;
+    n0_state_ts_1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
     n0_round_2 : [0..MAX_ROUND] init 0; 
     n0_my_proposal_2 : [0..MAX_TS] init 0;
-    n0_state_ts_2 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_2 : [-2..MAX_TS] init INVALID;
+    n0_state_ts_2 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_2 : [MIN_TS_VALUE..MAX_TS] init INVALID;
     n0_round_3 : [0..MAX_ROUND] init 0; 
     n0_my_proposal_3 : [0..MAX_TS] init 0;
-    n0_state_ts_3 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_3 : [-2..MAX_TS] init INVALID;
+    n0_state_ts_3 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_3 : [MIN_TS_VALUE..MAX_TS] init INVALID;
     n0_round_4 : [0..MAX_ROUND] init 0; 
     n0_my_proposal_4 : [0..MAX_TS] init 0;
-    n0_state_ts_4 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_4 : [-2..MAX_TS] init INVALID;
-    n0_proposal_0_n0 : [-2..MAX_TS] init INVALID;
-    n0_state_ts_0_n0 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_0_n0 : [-2..MAX_TS] init INVALID;
-    n0_proposal_0_n1 : [-2..MAX_TS] init INVALID;
-    n0_state_ts_0_n1 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_0_n1 : [-2..MAX_TS] init INVALID;
-    n0_proposal_1_n0 : [-2..MAX_TS] init INVALID;
-    n0_state_ts_1_n0 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_1_n0 : [-2..MAX_TS] init INVALID;
-    n0_proposal_1_n1 : [-2..MAX_TS] init INVALID;
-    n0_state_ts_1_n1 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_1_n1 : [-2..MAX_TS] init INVALID;
-    n0_proposal_2_n0 : [-2..MAX_TS] init INVALID;
-    n0_state_ts_2_n0 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_2_n0 : [-2..MAX_TS] init INVALID;
-    n0_proposal_2_n1 : [-2..MAX_TS] init INVALID;
-    n0_state_ts_2_n1 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_2_n1 : [-2..MAX_TS] init INVALID;
-    n0_proposal_3_n0 : [-2..MAX_TS] init INVALID;
-    n0_state_ts_3_n0 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_3_n0 : [-2..MAX_TS] init INVALID;
-    n0_proposal_3_n1 : [-2..MAX_TS] init INVALID;
-    n0_state_ts_3_n1 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_3_n1 : [-2..MAX_TS] init INVALID;
-    n0_proposal_4_n0 : [-2..MAX_TS] init INVALID;
-    n0_state_ts_4_n0 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_4_n0 : [-2..MAX_TS] init INVALID;
-    n0_proposal_4_n1 : [-2..MAX_TS] init INVALID;
-    n0_state_ts_4_n1 : [-2..MAX_TS] init INVALID;
-    n0_vote_ts_4_n1 : [-2..MAX_TS] init INVALID;
+    n0_state_ts_4 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_4 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_proposal_0_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_state_ts_0_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_0_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_proposal_0_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_state_ts_0_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_0_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_proposal_1_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_state_ts_1_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_1_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_proposal_1_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_state_ts_1_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_1_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_proposal_2_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_state_ts_2_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_2_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_proposal_2_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_state_ts_2_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_2_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_proposal_3_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_state_ts_3_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_3_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_proposal_3_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_state_ts_3_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_3_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_proposal_4_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_state_ts_4_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_4_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_proposal_4_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_state_ts_4_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n0_vote_ts_4_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
 
     // pkt to send
     n0_send_ready : bool init false; // ready means not yet sent
@@ -121,7 +124,7 @@ module node0
     n0_send_type : [0..NUM_CMD_TYPES] init 0;
     n0_send_seq : [0..LOG_SIZE] init 0;
     n0_send_round : [0..MAX_ROUND] init 0;
-    n0_send_cmd_ts : [-2..MAX_TS] init 0;
+    n0_send_cmd_ts : [MIN_TS_VALUE..MAX_TS] init 0;
 
     // pkt received
     n0_recv_ready : bool init false; // ready means received
@@ -129,7 +132,7 @@ module node0
     n0_recv_type : [0..NUM_CMD_TYPES] init 0;
     n0_recv_seq : [0..LOG_SIZE] init 0;
     n0_recv_round : [0..MAX_ROUND] init 0;
-    n0_recv_cmd_ts : [-2..MAX_TS] init 0;
+    n0_recv_cmd_ts : [MIN_TS_VALUE..MAX_TS] init 0;
     
     // Try on each queue slot and execute if the slot has min ts
     [n0_propose_next_command_for_seq0_usingqueue0] n0_stage=p0_bc_cmd_stage & n0_send_ready=false & n0_seq=0 & n0_pq_valid_0=true & (!n0_pq_valid_0|n0_pq_ts_0>=n0_pq_ts_0)&(!n0_pq_valid_1|n0_pq_ts_1>=n0_pq_ts_0) ->         (n0_stage'=p1_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_proposal) & (n0_send_cmd_ts'=n0_pq_ts_0) & (n0_proposal_0_n0'=n0_pq_ts_0);
@@ -233,43 +236,43 @@ module node0
     // Try to assign the state using the state from node 0 for seq 0 when we have enough states.
     [n0_process_state_assign_vote_0_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_0_n0!=INVALID&n0_state_ts_0_n1!=INVALID) & n0_state_ts_0_n0=n0_state_ts_0_n1 ->         (n0_vote_ts_0_n0'=n0_state_ts_0_n0) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=n0_state_ts_0_n0);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n0_process_state_assign_vote_0_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_0_n0!=INVALID&n0_state_ts_0_n1!=INVALID) & (n0_state_ts_0_n0!=n0_state_ts_0_n1) ->         (n0_vote_ts_0_n0'=BOT) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
+    [n0_process_state_assign_vote_0_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_0_n0!=INVALID&n0_state_ts_0_n1!=INVALID) & (n0_state_ts_0_n0!=n0_state_ts_0_n1) ->         (n0_vote_ts_0_n0'=QUES_VOTE) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 1 for seq 0 when we have enough states.
     [n0_process_state_assign_vote_0_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_0_n0!=INVALID&n0_state_ts_0_n1!=INVALID) & n0_state_ts_0_n0=n0_state_ts_0_n1 ->         (n0_vote_ts_0_n0'=n0_state_ts_0_n1) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=n0_state_ts_0_n1);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n0_process_state_assign_vote_0_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_0_n0!=INVALID&n0_state_ts_0_n1!=INVALID) & (n0_state_ts_0_n0!=n0_state_ts_0_n1) ->         (n0_vote_ts_0_n0'=BOT) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
+    [n0_process_state_assign_vote_0_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_0_n0!=INVALID&n0_state_ts_0_n1!=INVALID) & (n0_state_ts_0_n0!=n0_state_ts_0_n1) ->         (n0_vote_ts_0_n0'=QUES_VOTE) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 0 for seq 1 when we have enough states.
     [n0_process_state_assign_vote_1_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_1_n0!=INVALID&n0_state_ts_1_n1!=INVALID) & n0_state_ts_1_n0=n0_state_ts_1_n1 ->         (n0_vote_ts_1_n0'=n0_state_ts_1_n0) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=n0_state_ts_1_n0);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n0_process_state_assign_vote_1_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_1_n0!=INVALID&n0_state_ts_1_n1!=INVALID) & (n0_state_ts_1_n0!=n0_state_ts_1_n1) ->         (n0_vote_ts_1_n0'=BOT) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
+    [n0_process_state_assign_vote_1_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_1_n0!=INVALID&n0_state_ts_1_n1!=INVALID) & (n0_state_ts_1_n0!=n0_state_ts_1_n1) ->         (n0_vote_ts_1_n0'=QUES_VOTE) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 1 for seq 1 when we have enough states.
     [n0_process_state_assign_vote_1_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_1_n0!=INVALID&n0_state_ts_1_n1!=INVALID) & n0_state_ts_1_n0=n0_state_ts_1_n1 ->         (n0_vote_ts_1_n0'=n0_state_ts_1_n1) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=n0_state_ts_1_n1);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n0_process_state_assign_vote_1_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_1_n0!=INVALID&n0_state_ts_1_n1!=INVALID) & (n0_state_ts_1_n0!=n0_state_ts_1_n1) ->         (n0_vote_ts_1_n0'=BOT) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
+    [n0_process_state_assign_vote_1_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_1_n0!=INVALID&n0_state_ts_1_n1!=INVALID) & (n0_state_ts_1_n0!=n0_state_ts_1_n1) ->         (n0_vote_ts_1_n0'=QUES_VOTE) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 0 for seq 2 when we have enough states.
     [n0_process_state_assign_vote_2_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_2_n0!=INVALID&n0_state_ts_2_n1!=INVALID) & n0_state_ts_2_n0=n0_state_ts_2_n1 ->         (n0_vote_ts_2_n0'=n0_state_ts_2_n0) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=n0_state_ts_2_n0);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n0_process_state_assign_vote_2_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_2_n0!=INVALID&n0_state_ts_2_n1!=INVALID) & (n0_state_ts_2_n0!=n0_state_ts_2_n1) ->         (n0_vote_ts_2_n0'=BOT) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
+    [n0_process_state_assign_vote_2_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_2_n0!=INVALID&n0_state_ts_2_n1!=INVALID) & (n0_state_ts_2_n0!=n0_state_ts_2_n1) ->         (n0_vote_ts_2_n0'=QUES_VOTE) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 1 for seq 2 when we have enough states.
     [n0_process_state_assign_vote_2_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_2_n0!=INVALID&n0_state_ts_2_n1!=INVALID) & n0_state_ts_2_n0=n0_state_ts_2_n1 ->         (n0_vote_ts_2_n0'=n0_state_ts_2_n1) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=n0_state_ts_2_n1);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n0_process_state_assign_vote_2_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_2_n0!=INVALID&n0_state_ts_2_n1!=INVALID) & (n0_state_ts_2_n0!=n0_state_ts_2_n1) ->         (n0_vote_ts_2_n0'=BOT) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
+    [n0_process_state_assign_vote_2_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_2_n0!=INVALID&n0_state_ts_2_n1!=INVALID) & (n0_state_ts_2_n0!=n0_state_ts_2_n1) ->         (n0_vote_ts_2_n0'=QUES_VOTE) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 0 for seq 3 when we have enough states.
     [n0_process_state_assign_vote_3_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_3_n0!=INVALID&n0_state_ts_3_n1!=INVALID) & n0_state_ts_3_n0=n0_state_ts_3_n1 ->         (n0_vote_ts_3_n0'=n0_state_ts_3_n0) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=n0_state_ts_3_n0);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n0_process_state_assign_vote_3_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_3_n0!=INVALID&n0_state_ts_3_n1!=INVALID) & (n0_state_ts_3_n0!=n0_state_ts_3_n1) ->         (n0_vote_ts_3_n0'=BOT) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
+    [n0_process_state_assign_vote_3_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_3_n0!=INVALID&n0_state_ts_3_n1!=INVALID) & (n0_state_ts_3_n0!=n0_state_ts_3_n1) ->         (n0_vote_ts_3_n0'=QUES_VOTE) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 1 for seq 3 when we have enough states.
     [n0_process_state_assign_vote_3_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_3_n0!=INVALID&n0_state_ts_3_n1!=INVALID) & n0_state_ts_3_n0=n0_state_ts_3_n1 ->         (n0_vote_ts_3_n0'=n0_state_ts_3_n1) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=n0_state_ts_3_n1);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n0_process_state_assign_vote_3_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_3_n0!=INVALID&n0_state_ts_3_n1!=INVALID) & (n0_state_ts_3_n0!=n0_state_ts_3_n1) ->         (n0_vote_ts_3_n0'=BOT) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
+    [n0_process_state_assign_vote_3_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_3_n0!=INVALID&n0_state_ts_3_n1!=INVALID) & (n0_state_ts_3_n0!=n0_state_ts_3_n1) ->         (n0_vote_ts_3_n0'=QUES_VOTE) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 0 for seq 4 when we have enough states.
     [n0_process_state_assign_vote_4_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_4_n0!=INVALID&n0_state_ts_4_n1!=INVALID) & n0_state_ts_4_n0=n0_state_ts_4_n1 ->         (n0_vote_ts_4_n0'=n0_state_ts_4_n0) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=n0_state_ts_4_n0);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n0_process_state_assign_vote_4_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_4_n0!=INVALID&n0_state_ts_4_n1!=INVALID) & (n0_state_ts_4_n0!=n0_state_ts_4_n1) ->         (n0_vote_ts_4_n0'=BOT) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
+    [n0_process_state_assign_vote_4_using_n0] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_4_n0!=INVALID&n0_state_ts_4_n1!=INVALID) & (n0_state_ts_4_n0!=n0_state_ts_4_n1) ->         (n0_vote_ts_4_n0'=QUES_VOTE) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 1 for seq 4 when we have enough states.
     [n0_process_state_assign_vote_4_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_4_n0!=INVALID&n0_state_ts_4_n1!=INVALID) & n0_state_ts_4_n0=n0_state_ts_4_n1 ->         (n0_vote_ts_4_n0'=n0_state_ts_4_n1) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=n0_state_ts_4_n1);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n0_process_state_assign_vote_4_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_4_n0!=INVALID&n0_state_ts_4_n1!=INVALID) & (n0_state_ts_4_n0!=n0_state_ts_4_n1) ->         (n0_vote_ts_4_n0'=BOT) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
+    [n0_process_state_assign_vote_4_using_n1] n0_stage=p2s_stage & n0_send_ready=false & (n0_state_ts_4_n0!=INVALID&n0_state_ts_4_n1!=INVALID) & (n0_state_ts_4_n0!=n0_state_ts_4_n1) ->         (n0_vote_ts_4_n0'=QUES_VOTE) & (n0_stage'=p2v_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_vote) & (n0_send_cmd_ts'=BOT);
 
     // Process when a Vote pkt is ready.
     
@@ -295,85 +298,85 @@ module node0
     [n0_process_vote_from_n1_for_seq4] n0_stage=p2v_stage & n0_recv_ready=true & n0_recv_from=1 & n0_recv_type=cmd_vote & n0_recv_seq=4 ->         (n0_recv_ready'=false) & (n0_vote_ts_4_n1'=n0_recv_cmd_ts);
     // TODO: here is a hack using n{_}_vote_ts_i_n{_}=n{_}_vote_ts_i_n1 for two nodes scenario.
     // Try to use the vote from node 0 for seq 0 when we have enough same votes.
-    [n0_process_vote_for_seq0_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0=n0_vote_ts_0_n1 & n0_vote_ts_0_n0!=BOT) ->         (n0_log_ts_0'=n0_vote_ts_0_n0) & (n0_stage'=p1_stage) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n0_process_vote_for_seq0_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0!=n0_vote_ts_0_n1 & n0_vote_ts_0_n0!=BOT) ->         (n0_state_ts_0_n0'=n0_vote_ts_0_n0) & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_0_n0) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
-    [n0_process_vote_for_seq0_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0!=n0_vote_ts_0_n1 & n0_vote_ts_0_n1!=BOT) ->         (n0_state_ts_0_n0'=n0_vote_ts_0_n1) & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_0_n1) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
-    // We only got BOT, let god decides.
-    [n0_process_vote_for_seq0_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0=n0_vote_ts_0_n1 & n0_vote_ts_0_n1=BOT & n0_state_ts_0_n0!=INVALID & n0_state_ts_0_n0!=BOT) ->         (n0_state_ts_0_n0'=BOT)                      & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
-    [n0_process_vote_for_seq0_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0=n0_vote_ts_0_n1 & n0_vote_ts_0_n1=BOT & n0_state_ts_0_n0!=INVALID & n0_state_ts_0_n0!=BOT) ->         (n0_state_ts_0_n0'=n0_state_ts_0_n0) & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_0_n0) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
+    [n0_process_vote_for_seq0_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0=n0_vote_ts_0_n1 & n0_vote_ts_0_n0!=QUES_VOTE) ->         (n0_log_ts_0'=n0_vote_ts_0_n0) & (n0_stage'=p1_stage) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n0_process_vote_for_seq0_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0!=n0_vote_ts_0_n1 & n0_vote_ts_0_n0!=QUES_VOTE) ->         (n0_state_ts_0_n0'=n0_vote_ts_0_n0) & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_0_n0) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
+    [n0_process_vote_for_seq0_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0!=n0_vote_ts_0_n1 & n0_vote_ts_0_n1!=QUES_VOTE) ->         (n0_state_ts_0_n0'=n0_vote_ts_0_n1) & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_0_n1) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n0_process_vote_for_seq0_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0=n0_vote_ts_0_n1 & n0_vote_ts_0_n0=QUES_VOTE & n0_state_ts_0_n0!=INVALID) ->         (n0_state_ts_0_n0'=BOT)                      & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
+    [n0_process_vote_for_seq0_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0=n0_vote_ts_0_n1 & n0_vote_ts_0_n0=QUES_VOTE & n0_state_ts_0_n0!=INVALID) ->         (n0_state_ts_0_n0'=n0_state_ts_0_n0) & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_0_n0) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
     // Try to use the vote from node 1 for seq 0 when we have enough same votes.
-    [n0_process_vote_for_seq0_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0=n0_vote_ts_0_n1 & n0_vote_ts_0_n0!=BOT) ->         (n0_log_ts_0'=n0_vote_ts_0_n1) & (n0_stage'=p1_stage) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n0_process_vote_for_seq0_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0!=n0_vote_ts_0_n1 & n0_vote_ts_0_n0!=BOT) ->         (n0_state_ts_0_n0'=n0_vote_ts_0_n0) & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_0_n0) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
-    [n0_process_vote_for_seq0_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0!=n0_vote_ts_0_n1 & n0_vote_ts_0_n1!=BOT) ->         (n0_state_ts_0_n0'=n0_vote_ts_0_n1) & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_0_n1) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
-    // We only got BOT, let god decides.
-    [n0_process_vote_for_seq0_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0=n0_vote_ts_0_n1 & n0_vote_ts_0_n1=BOT & n0_state_ts_0_n1!=INVALID & n0_state_ts_0_n1!=BOT) ->         (n0_state_ts_0_n0'=BOT)                      & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
-    [n0_process_vote_for_seq0_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0=n0_vote_ts_0_n1 & n0_vote_ts_0_n1=BOT & n0_state_ts_0_n1!=INVALID & n0_state_ts_0_n1!=BOT) ->         (n0_state_ts_0_n0'=n0_state_ts_0_n1) & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_0_n1) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
+    [n0_process_vote_for_seq0_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0=n0_vote_ts_0_n1 & n0_vote_ts_0_n0!=QUES_VOTE) ->         (n0_log_ts_0'=n0_vote_ts_0_n1) & (n0_stage'=p1_stage) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n0_process_vote_for_seq0_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0!=n0_vote_ts_0_n1 & n0_vote_ts_0_n0!=QUES_VOTE) ->         (n0_state_ts_0_n0'=n0_vote_ts_0_n0) & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_0_n0) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
+    [n0_process_vote_for_seq0_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0!=n0_vote_ts_0_n1 & n0_vote_ts_0_n1!=QUES_VOTE) ->         (n0_state_ts_0_n0'=n0_vote_ts_0_n1) & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_0_n1) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n0_process_vote_for_seq0_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0=n0_vote_ts_0_n1 & n0_vote_ts_0_n0=QUES_VOTE & n0_state_ts_0_n1!=INVALID) ->         (n0_state_ts_0_n0'=BOT)                      & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
+    [n0_process_vote_for_seq0_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_0_n0!=INVALID&n0_vote_ts_0_n1!=INVALID & (n0_vote_ts_0_n0=n0_vote_ts_0_n1 & n0_vote_ts_0_n0=QUES_VOTE & n0_state_ts_0_n1!=INVALID) ->         (n0_state_ts_0_n0'=n0_state_ts_0_n1) & (n0_vote_ts_0_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_0_n1) & (n0_state_ts_0_n1'=INVALID)&(n0_vote_ts_0_n1'=INVALID);
     // Try to use the vote from node 0 for seq 1 when we have enough same votes.
-    [n0_process_vote_for_seq1_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0=n0_vote_ts_1_n1 & n0_vote_ts_1_n0!=BOT) ->         (n0_log_ts_1'=n0_vote_ts_1_n0) & (n0_stage'=p1_stage) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n0_process_vote_for_seq1_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0!=n0_vote_ts_1_n1 & n0_vote_ts_1_n0!=BOT) ->         (n0_state_ts_1_n0'=n0_vote_ts_1_n0) & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_1_n0) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
-    [n0_process_vote_for_seq1_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0!=n0_vote_ts_1_n1 & n0_vote_ts_1_n1!=BOT) ->         (n0_state_ts_1_n0'=n0_vote_ts_1_n1) & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_1_n1) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
-    // We only got BOT, let god decides.
-    [n0_process_vote_for_seq1_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0=n0_vote_ts_1_n1 & n0_vote_ts_1_n1=BOT & n0_state_ts_1_n0!=INVALID & n0_state_ts_1_n0!=BOT) ->         (n0_state_ts_1_n0'=BOT)                      & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
-    [n0_process_vote_for_seq1_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0=n0_vote_ts_1_n1 & n0_vote_ts_1_n1=BOT & n0_state_ts_1_n0!=INVALID & n0_state_ts_1_n0!=BOT) ->         (n0_state_ts_1_n0'=n0_state_ts_1_n0) & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_1_n0) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
+    [n0_process_vote_for_seq1_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0=n0_vote_ts_1_n1 & n0_vote_ts_1_n0!=QUES_VOTE) ->         (n0_log_ts_1'=n0_vote_ts_1_n0) & (n0_stage'=p1_stage) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n0_process_vote_for_seq1_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0!=n0_vote_ts_1_n1 & n0_vote_ts_1_n0!=QUES_VOTE) ->         (n0_state_ts_1_n0'=n0_vote_ts_1_n0) & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_1_n0) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
+    [n0_process_vote_for_seq1_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0!=n0_vote_ts_1_n1 & n0_vote_ts_1_n1!=QUES_VOTE) ->         (n0_state_ts_1_n0'=n0_vote_ts_1_n1) & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_1_n1) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n0_process_vote_for_seq1_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0=n0_vote_ts_1_n1 & n0_vote_ts_1_n0=QUES_VOTE & n0_state_ts_1_n0!=INVALID) ->         (n0_state_ts_1_n0'=BOT)                      & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
+    [n0_process_vote_for_seq1_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0=n0_vote_ts_1_n1 & n0_vote_ts_1_n0=QUES_VOTE & n0_state_ts_1_n0!=INVALID) ->         (n0_state_ts_1_n0'=n0_state_ts_1_n0) & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_1_n0) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
     // Try to use the vote from node 1 for seq 1 when we have enough same votes.
-    [n0_process_vote_for_seq1_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0=n0_vote_ts_1_n1 & n0_vote_ts_1_n0!=BOT) ->         (n0_log_ts_1'=n0_vote_ts_1_n1) & (n0_stage'=p1_stage) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n0_process_vote_for_seq1_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0!=n0_vote_ts_1_n1 & n0_vote_ts_1_n0!=BOT) ->         (n0_state_ts_1_n0'=n0_vote_ts_1_n0) & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_1_n0) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
-    [n0_process_vote_for_seq1_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0!=n0_vote_ts_1_n1 & n0_vote_ts_1_n1!=BOT) ->         (n0_state_ts_1_n0'=n0_vote_ts_1_n1) & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_1_n1) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
-    // We only got BOT, let god decides.
-    [n0_process_vote_for_seq1_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0=n0_vote_ts_1_n1 & n0_vote_ts_1_n1=BOT & n0_state_ts_1_n1!=INVALID & n0_state_ts_1_n1!=BOT) ->         (n0_state_ts_1_n0'=BOT)                      & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
-    [n0_process_vote_for_seq1_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0=n0_vote_ts_1_n1 & n0_vote_ts_1_n1=BOT & n0_state_ts_1_n1!=INVALID & n0_state_ts_1_n1!=BOT) ->         (n0_state_ts_1_n0'=n0_state_ts_1_n1) & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_1_n1) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
+    [n0_process_vote_for_seq1_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0=n0_vote_ts_1_n1 & n0_vote_ts_1_n0!=QUES_VOTE) ->         (n0_log_ts_1'=n0_vote_ts_1_n1) & (n0_stage'=p1_stage) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n0_process_vote_for_seq1_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0!=n0_vote_ts_1_n1 & n0_vote_ts_1_n0!=QUES_VOTE) ->         (n0_state_ts_1_n0'=n0_vote_ts_1_n0) & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_1_n0) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
+    [n0_process_vote_for_seq1_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0!=n0_vote_ts_1_n1 & n0_vote_ts_1_n1!=QUES_VOTE) ->         (n0_state_ts_1_n0'=n0_vote_ts_1_n1) & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_1_n1) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n0_process_vote_for_seq1_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0=n0_vote_ts_1_n1 & n0_vote_ts_1_n0=QUES_VOTE & n0_state_ts_1_n1!=INVALID) ->         (n0_state_ts_1_n0'=BOT)                      & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
+    [n0_process_vote_for_seq1_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_1_n0!=INVALID&n0_vote_ts_1_n1!=INVALID & (n0_vote_ts_1_n0=n0_vote_ts_1_n1 & n0_vote_ts_1_n0=QUES_VOTE & n0_state_ts_1_n1!=INVALID) ->         (n0_state_ts_1_n0'=n0_state_ts_1_n1) & (n0_vote_ts_1_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_1_n1) & (n0_state_ts_1_n1'=INVALID)&(n0_vote_ts_1_n1'=INVALID);
     // Try to use the vote from node 0 for seq 2 when we have enough same votes.
-    [n0_process_vote_for_seq2_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0=n0_vote_ts_2_n1 & n0_vote_ts_2_n0!=BOT) ->         (n0_log_ts_2'=n0_vote_ts_2_n0) & (n0_stage'=p1_stage) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n0_process_vote_for_seq2_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0!=n0_vote_ts_2_n1 & n0_vote_ts_2_n0!=BOT) ->         (n0_state_ts_2_n0'=n0_vote_ts_2_n0) & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_2_n0) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
-    [n0_process_vote_for_seq2_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0!=n0_vote_ts_2_n1 & n0_vote_ts_2_n1!=BOT) ->         (n0_state_ts_2_n0'=n0_vote_ts_2_n1) & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_2_n1) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
-    // We only got BOT, let god decides.
-    [n0_process_vote_for_seq2_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0=n0_vote_ts_2_n1 & n0_vote_ts_2_n1=BOT & n0_state_ts_2_n0!=INVALID & n0_state_ts_2_n0!=BOT) ->         (n0_state_ts_2_n0'=BOT)                      & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
-    [n0_process_vote_for_seq2_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0=n0_vote_ts_2_n1 & n0_vote_ts_2_n1=BOT & n0_state_ts_2_n0!=INVALID & n0_state_ts_2_n0!=BOT) ->         (n0_state_ts_2_n0'=n0_state_ts_2_n0) & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_2_n0) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
+    [n0_process_vote_for_seq2_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0=n0_vote_ts_2_n1 & n0_vote_ts_2_n0!=QUES_VOTE) ->         (n0_log_ts_2'=n0_vote_ts_2_n0) & (n0_stage'=p1_stage) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n0_process_vote_for_seq2_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0!=n0_vote_ts_2_n1 & n0_vote_ts_2_n0!=QUES_VOTE) ->         (n0_state_ts_2_n0'=n0_vote_ts_2_n0) & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_2_n0) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
+    [n0_process_vote_for_seq2_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0!=n0_vote_ts_2_n1 & n0_vote_ts_2_n1!=QUES_VOTE) ->         (n0_state_ts_2_n0'=n0_vote_ts_2_n1) & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_2_n1) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n0_process_vote_for_seq2_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0=n0_vote_ts_2_n1 & n0_vote_ts_2_n0=QUES_VOTE & n0_state_ts_2_n0!=INVALID) ->         (n0_state_ts_2_n0'=BOT)                      & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
+    [n0_process_vote_for_seq2_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0=n0_vote_ts_2_n1 & n0_vote_ts_2_n0=QUES_VOTE & n0_state_ts_2_n0!=INVALID) ->         (n0_state_ts_2_n0'=n0_state_ts_2_n0) & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_2_n0) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
     // Try to use the vote from node 1 for seq 2 when we have enough same votes.
-    [n0_process_vote_for_seq2_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0=n0_vote_ts_2_n1 & n0_vote_ts_2_n0!=BOT) ->         (n0_log_ts_2'=n0_vote_ts_2_n1) & (n0_stage'=p1_stage) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n0_process_vote_for_seq2_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0!=n0_vote_ts_2_n1 & n0_vote_ts_2_n0!=BOT) ->         (n0_state_ts_2_n0'=n0_vote_ts_2_n0) & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_2_n0) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
-    [n0_process_vote_for_seq2_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0!=n0_vote_ts_2_n1 & n0_vote_ts_2_n1!=BOT) ->         (n0_state_ts_2_n0'=n0_vote_ts_2_n1) & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_2_n1) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
-    // We only got BOT, let god decides.
-    [n0_process_vote_for_seq2_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0=n0_vote_ts_2_n1 & n0_vote_ts_2_n1=BOT & n0_state_ts_2_n1!=INVALID & n0_state_ts_2_n1!=BOT) ->         (n0_state_ts_2_n0'=BOT)                      & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
-    [n0_process_vote_for_seq2_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0=n0_vote_ts_2_n1 & n0_vote_ts_2_n1=BOT & n0_state_ts_2_n1!=INVALID & n0_state_ts_2_n1!=BOT) ->         (n0_state_ts_2_n0'=n0_state_ts_2_n1) & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_2_n1) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
+    [n0_process_vote_for_seq2_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0=n0_vote_ts_2_n1 & n0_vote_ts_2_n0!=QUES_VOTE) ->         (n0_log_ts_2'=n0_vote_ts_2_n1) & (n0_stage'=p1_stage) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n0_process_vote_for_seq2_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0!=n0_vote_ts_2_n1 & n0_vote_ts_2_n0!=QUES_VOTE) ->         (n0_state_ts_2_n0'=n0_vote_ts_2_n0) & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_2_n0) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
+    [n0_process_vote_for_seq2_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0!=n0_vote_ts_2_n1 & n0_vote_ts_2_n1!=QUES_VOTE) ->         (n0_state_ts_2_n0'=n0_vote_ts_2_n1) & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_2_n1) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n0_process_vote_for_seq2_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0=n0_vote_ts_2_n1 & n0_vote_ts_2_n0=QUES_VOTE & n0_state_ts_2_n1!=INVALID) ->         (n0_state_ts_2_n0'=BOT)                      & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
+    [n0_process_vote_for_seq2_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_2_n0!=INVALID&n0_vote_ts_2_n1!=INVALID & (n0_vote_ts_2_n0=n0_vote_ts_2_n1 & n0_vote_ts_2_n0=QUES_VOTE & n0_state_ts_2_n1!=INVALID) ->         (n0_state_ts_2_n0'=n0_state_ts_2_n1) & (n0_vote_ts_2_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_2_n1) & (n0_state_ts_2_n1'=INVALID)&(n0_vote_ts_2_n1'=INVALID);
     // Try to use the vote from node 0 for seq 3 when we have enough same votes.
-    [n0_process_vote_for_seq3_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0=n0_vote_ts_3_n1 & n0_vote_ts_3_n0!=BOT) ->         (n0_log_ts_3'=n0_vote_ts_3_n0) & (n0_stage'=p1_stage) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n0_process_vote_for_seq3_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0!=n0_vote_ts_3_n1 & n0_vote_ts_3_n0!=BOT) ->         (n0_state_ts_3_n0'=n0_vote_ts_3_n0) & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_3_n0) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
-    [n0_process_vote_for_seq3_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0!=n0_vote_ts_3_n1 & n0_vote_ts_3_n1!=BOT) ->         (n0_state_ts_3_n0'=n0_vote_ts_3_n1) & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_3_n1) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
-    // We only got BOT, let god decides.
-    [n0_process_vote_for_seq3_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0=n0_vote_ts_3_n1 & n0_vote_ts_3_n1=BOT & n0_state_ts_3_n0!=INVALID & n0_state_ts_3_n0!=BOT) ->         (n0_state_ts_3_n0'=BOT)                      & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
-    [n0_process_vote_for_seq3_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0=n0_vote_ts_3_n1 & n0_vote_ts_3_n1=BOT & n0_state_ts_3_n0!=INVALID & n0_state_ts_3_n0!=BOT) ->         (n0_state_ts_3_n0'=n0_state_ts_3_n0) & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_3_n0) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
+    [n0_process_vote_for_seq3_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0=n0_vote_ts_3_n1 & n0_vote_ts_3_n0!=QUES_VOTE) ->         (n0_log_ts_3'=n0_vote_ts_3_n0) & (n0_stage'=p1_stage) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n0_process_vote_for_seq3_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0!=n0_vote_ts_3_n1 & n0_vote_ts_3_n0!=QUES_VOTE) ->         (n0_state_ts_3_n0'=n0_vote_ts_3_n0) & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_3_n0) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
+    [n0_process_vote_for_seq3_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0!=n0_vote_ts_3_n1 & n0_vote_ts_3_n1!=QUES_VOTE) ->         (n0_state_ts_3_n0'=n0_vote_ts_3_n1) & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_3_n1) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n0_process_vote_for_seq3_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0=n0_vote_ts_3_n1 & n0_vote_ts_3_n0=QUES_VOTE & n0_state_ts_3_n0!=INVALID) ->         (n0_state_ts_3_n0'=BOT)                      & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
+    [n0_process_vote_for_seq3_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0=n0_vote_ts_3_n1 & n0_vote_ts_3_n0=QUES_VOTE & n0_state_ts_3_n0!=INVALID) ->         (n0_state_ts_3_n0'=n0_state_ts_3_n0) & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_3_n0) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
     // Try to use the vote from node 1 for seq 3 when we have enough same votes.
-    [n0_process_vote_for_seq3_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0=n0_vote_ts_3_n1 & n0_vote_ts_3_n0!=BOT) ->         (n0_log_ts_3'=n0_vote_ts_3_n1) & (n0_stage'=p1_stage) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n0_process_vote_for_seq3_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0!=n0_vote_ts_3_n1 & n0_vote_ts_3_n0!=BOT) ->         (n0_state_ts_3_n0'=n0_vote_ts_3_n0) & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_3_n0) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
-    [n0_process_vote_for_seq3_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0!=n0_vote_ts_3_n1 & n0_vote_ts_3_n1!=BOT) ->         (n0_state_ts_3_n0'=n0_vote_ts_3_n1) & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_3_n1) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
-    // We only got BOT, let god decides.
-    [n0_process_vote_for_seq3_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0=n0_vote_ts_3_n1 & n0_vote_ts_3_n1=BOT & n0_state_ts_3_n1!=INVALID & n0_state_ts_3_n1!=BOT) ->         (n0_state_ts_3_n0'=BOT)                      & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
-    [n0_process_vote_for_seq3_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0=n0_vote_ts_3_n1 & n0_vote_ts_3_n1=BOT & n0_state_ts_3_n1!=INVALID & n0_state_ts_3_n1!=BOT) ->         (n0_state_ts_3_n0'=n0_state_ts_3_n1) & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_3_n1) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
+    [n0_process_vote_for_seq3_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0=n0_vote_ts_3_n1 & n0_vote_ts_3_n0!=QUES_VOTE) ->         (n0_log_ts_3'=n0_vote_ts_3_n1) & (n0_stage'=p1_stage) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n0_process_vote_for_seq3_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0!=n0_vote_ts_3_n1 & n0_vote_ts_3_n0!=QUES_VOTE) ->         (n0_state_ts_3_n0'=n0_vote_ts_3_n0) & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_3_n0) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
+    [n0_process_vote_for_seq3_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0!=n0_vote_ts_3_n1 & n0_vote_ts_3_n1!=QUES_VOTE) ->         (n0_state_ts_3_n0'=n0_vote_ts_3_n1) & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_3_n1) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n0_process_vote_for_seq3_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0=n0_vote_ts_3_n1 & n0_vote_ts_3_n0=QUES_VOTE & n0_state_ts_3_n1!=INVALID) ->         (n0_state_ts_3_n0'=BOT)                      & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
+    [n0_process_vote_for_seq3_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_3_n0!=INVALID&n0_vote_ts_3_n1!=INVALID & (n0_vote_ts_3_n0=n0_vote_ts_3_n1 & n0_vote_ts_3_n0=QUES_VOTE & n0_state_ts_3_n1!=INVALID) ->         (n0_state_ts_3_n0'=n0_state_ts_3_n1) & (n0_vote_ts_3_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_3_n1) & (n0_state_ts_3_n1'=INVALID)&(n0_vote_ts_3_n1'=INVALID);
     // Try to use the vote from node 0 for seq 4 when we have enough same votes.
-    [n0_process_vote_for_seq4_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0=n0_vote_ts_4_n1 & n0_vote_ts_4_n0!=BOT) ->         (n0_log_ts_4'=n0_vote_ts_4_n0) & (n0_stage'=p1_stage) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n0_process_vote_for_seq4_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0!=n0_vote_ts_4_n1 & n0_vote_ts_4_n0!=BOT) ->         (n0_state_ts_4_n0'=n0_vote_ts_4_n0) & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_4_n0) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
-    [n0_process_vote_for_seq4_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0!=n0_vote_ts_4_n1 & n0_vote_ts_4_n1!=BOT) ->         (n0_state_ts_4_n0'=n0_vote_ts_4_n1) & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_4_n1) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
-    // We only got BOT, let god decides.
-    [n0_process_vote_for_seq4_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0=n0_vote_ts_4_n1 & n0_vote_ts_4_n1=BOT & n0_state_ts_4_n0!=INVALID & n0_state_ts_4_n0!=BOT) ->         (n0_state_ts_4_n0'=BOT)                      & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
-    [n0_process_vote_for_seq4_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0=n0_vote_ts_4_n1 & n0_vote_ts_4_n1=BOT & n0_state_ts_4_n0!=INVALID & n0_state_ts_4_n0!=BOT) ->         (n0_state_ts_4_n0'=n0_state_ts_4_n0) & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_4_n0) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
+    [n0_process_vote_for_seq4_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0=n0_vote_ts_4_n1 & n0_vote_ts_4_n0!=QUES_VOTE) ->         (n0_log_ts_4'=n0_vote_ts_4_n0) & (n0_stage'=p1_stage) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n0_process_vote_for_seq4_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0!=n0_vote_ts_4_n1 & n0_vote_ts_4_n0!=QUES_VOTE) ->         (n0_state_ts_4_n0'=n0_vote_ts_4_n0) & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_4_n0) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
+    [n0_process_vote_for_seq4_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0!=n0_vote_ts_4_n1 & n0_vote_ts_4_n1!=QUES_VOTE) ->         (n0_state_ts_4_n0'=n0_vote_ts_4_n1) & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_4_n1) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n0_process_vote_for_seq4_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0=n0_vote_ts_4_n1 & n0_vote_ts_4_n0=QUES_VOTE & n0_state_ts_4_n0!=INVALID) ->         (n0_state_ts_4_n0'=BOT)                      & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
+    [n0_process_vote_for_seq4_using_n0] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0=n0_vote_ts_4_n1 & n0_vote_ts_4_n0=QUES_VOTE & n0_state_ts_4_n0!=INVALID) ->         (n0_state_ts_4_n0'=n0_state_ts_4_n0) & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_4_n0) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
     // Try to use the vote from node 1 for seq 4 when we have enough same votes.
-    [n0_process_vote_for_seq4_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0=n0_vote_ts_4_n1 & n0_vote_ts_4_n0!=BOT) ->         (n0_log_ts_4'=n0_vote_ts_4_n1) & (n0_stage'=p1_stage) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n0_process_vote_for_seq4_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0!=n0_vote_ts_4_n1 & n0_vote_ts_4_n0!=BOT) ->         (n0_state_ts_4_n0'=n0_vote_ts_4_n0) & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_4_n0) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
-    [n0_process_vote_for_seq4_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0!=n0_vote_ts_4_n1 & n0_vote_ts_4_n1!=BOT) ->         (n0_state_ts_4_n0'=n0_vote_ts_4_n1) & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_4_n1) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
-    // We only got BOT, let god decides.
-    [n0_process_vote_for_seq4_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0=n0_vote_ts_4_n1 & n0_vote_ts_4_n1=BOT & n0_state_ts_4_n1!=INVALID & n0_state_ts_4_n1!=BOT) ->         (n0_state_ts_4_n0'=BOT)                      & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
-    [n0_process_vote_for_seq4_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0=n0_vote_ts_4_n1 & n0_vote_ts_4_n1=BOT & n0_state_ts_4_n1!=INVALID & n0_state_ts_4_n1!=BOT) ->         (n0_state_ts_4_n0'=n0_state_ts_4_n1) & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_4_n1) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
+    [n0_process_vote_for_seq4_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0=n0_vote_ts_4_n1 & n0_vote_ts_4_n0!=QUES_VOTE) ->         (n0_log_ts_4'=n0_vote_ts_4_n1) & (n0_stage'=p1_stage) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n0_process_vote_for_seq4_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0!=n0_vote_ts_4_n1 & n0_vote_ts_4_n0!=QUES_VOTE) ->         (n0_state_ts_4_n0'=n0_vote_ts_4_n0) & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_4_n0) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
+    [n0_process_vote_for_seq4_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0!=n0_vote_ts_4_n1 & n0_vote_ts_4_n1!=QUES_VOTE) ->         (n0_state_ts_4_n0'=n0_vote_ts_4_n1) & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_4_n1) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n0_process_vote_for_seq4_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0=n0_vote_ts_4_n1 & n0_vote_ts_4_n0=QUES_VOTE & n0_state_ts_4_n1!=INVALID) ->         (n0_state_ts_4_n0'=BOT)                      & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=BOT)                      & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
+    [n0_process_vote_for_seq4_using_n1] n0_stage=p2v_stage & n0_send_ready=false & n0_vote_ts_4_n0!=INVALID&n0_vote_ts_4_n1!=INVALID & (n0_vote_ts_4_n0=n0_vote_ts_4_n1 & n0_vote_ts_4_n0=QUES_VOTE & n0_state_ts_4_n1!=INVALID) ->         (n0_state_ts_4_n0'=n0_state_ts_4_n1) & (n0_vote_ts_4_n0'=INVALID) & (n0_stage'=p2s_stage) & (n0_send_ready'=true) & (n0_send_is_broadcast'=true) & (n0_send_type'=cmd_state) & (n0_send_cmd_ts'=n0_state_ts_4_n1) & (n0_state_ts_4_n1'=INVALID)&(n0_vote_ts_4_n1'=INVALID);
 
     // Send when a pkt is ready; Recv when a pkt is ready.
     [recv_10_0] n0_recv_ready=false ->         (n0_recv_ready'=true) & (n0_recv_from'=1) & (n0_recv_type'=w10_pkt_type_0) & (n0_recv_seq'=w10_pkt_seq_0) & (n0_recv_round'=w10_pkt_round_0) & (n0_recv_cmd_ts'=w10_pkt_cmd_ts_0);
@@ -391,66 +394,66 @@ module node1
 	n1_stage : [0..5] init p0_bc_cmd_stage;
     /// p1 stage
     n1_seq : [0..LOG_SIZE] init 0;
-    n1_pq_valid_0 : bool init false;
-    n1_pq_ts_0 : [0..MAX_TS] init 0;
+    n1_pq_valid_0 : bool init true;
+    n1_pq_ts_0 : [0..MAX_TS] init 2;
     n1_pq_valid_1 : bool init false;
     n1_pq_ts_1 : [0..MAX_TS] init 0;
-    n1_log_ts_0 : [-2..LOG_SIZE] init INVALID; 
-    n1_log_ts_1 : [-2..LOG_SIZE] init INVALID; 
-    n1_log_ts_2 : [-2..LOG_SIZE] init INVALID; 
-    n1_log_ts_3 : [-2..LOG_SIZE] init INVALID; 
-    n1_log_ts_4 : [-2..LOG_SIZE] init INVALID; 
+    n1_log_ts_0 : [MIN_TS_VALUE..LOG_SIZE] init INVALID; 
+    n1_log_ts_1 : [MIN_TS_VALUE..LOG_SIZE] init INVALID; 
+    n1_log_ts_2 : [MIN_TS_VALUE..LOG_SIZE] init INVALID; 
+    n1_log_ts_3 : [MIN_TS_VALUE..LOG_SIZE] init INVALID; 
+    n1_log_ts_4 : [MIN_TS_VALUE..LOG_SIZE] init INVALID; 
     /// p2 stage
     n1_round_0 : [0..MAX_ROUND] init 0; 
     n1_my_proposal_0 : [0..MAX_TS] init 0;
-    n1_state_ts_0 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_0 : [-2..MAX_TS] init INVALID;
+    n1_state_ts_0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
     n1_round_1 : [0..MAX_ROUND] init 0; 
     n1_my_proposal_1 : [0..MAX_TS] init 0;
-    n1_state_ts_1 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_1 : [-2..MAX_TS] init INVALID;
+    n1_state_ts_1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
     n1_round_2 : [0..MAX_ROUND] init 0; 
     n1_my_proposal_2 : [0..MAX_TS] init 0;
-    n1_state_ts_2 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_2 : [-2..MAX_TS] init INVALID;
+    n1_state_ts_2 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_2 : [MIN_TS_VALUE..MAX_TS] init INVALID;
     n1_round_3 : [0..MAX_ROUND] init 0; 
     n1_my_proposal_3 : [0..MAX_TS] init 0;
-    n1_state_ts_3 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_3 : [-2..MAX_TS] init INVALID;
+    n1_state_ts_3 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_3 : [MIN_TS_VALUE..MAX_TS] init INVALID;
     n1_round_4 : [0..MAX_ROUND] init 0; 
     n1_my_proposal_4 : [0..MAX_TS] init 0;
-    n1_state_ts_4 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_4 : [-2..MAX_TS] init INVALID;
-    n1_proposal_0_n0 : [-2..MAX_TS] init INVALID;
-    n1_state_ts_0_n0 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_0_n0 : [-2..MAX_TS] init INVALID;
-    n1_proposal_0_n1 : [-2..MAX_TS] init INVALID;
-    n1_state_ts_0_n1 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_0_n1 : [-2..MAX_TS] init INVALID;
-    n1_proposal_1_n0 : [-2..MAX_TS] init INVALID;
-    n1_state_ts_1_n0 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_1_n0 : [-2..MAX_TS] init INVALID;
-    n1_proposal_1_n1 : [-2..MAX_TS] init INVALID;
-    n1_state_ts_1_n1 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_1_n1 : [-2..MAX_TS] init INVALID;
-    n1_proposal_2_n0 : [-2..MAX_TS] init INVALID;
-    n1_state_ts_2_n0 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_2_n0 : [-2..MAX_TS] init INVALID;
-    n1_proposal_2_n1 : [-2..MAX_TS] init INVALID;
-    n1_state_ts_2_n1 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_2_n1 : [-2..MAX_TS] init INVALID;
-    n1_proposal_3_n0 : [-2..MAX_TS] init INVALID;
-    n1_state_ts_3_n0 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_3_n0 : [-2..MAX_TS] init INVALID;
-    n1_proposal_3_n1 : [-2..MAX_TS] init INVALID;
-    n1_state_ts_3_n1 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_3_n1 : [-2..MAX_TS] init INVALID;
-    n1_proposal_4_n0 : [-2..MAX_TS] init INVALID;
-    n1_state_ts_4_n0 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_4_n0 : [-2..MAX_TS] init INVALID;
-    n1_proposal_4_n1 : [-2..MAX_TS] init INVALID;
-    n1_state_ts_4_n1 : [-2..MAX_TS] init INVALID;
-    n1_vote_ts_4_n1 : [-2..MAX_TS] init INVALID;
+    n1_state_ts_4 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_4 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_proposal_0_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_state_ts_0_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_0_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_proposal_0_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_state_ts_0_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_0_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_proposal_1_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_state_ts_1_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_1_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_proposal_1_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_state_ts_1_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_1_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_proposal_2_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_state_ts_2_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_2_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_proposal_2_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_state_ts_2_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_2_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_proposal_3_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_state_ts_3_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_3_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_proposal_3_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_state_ts_3_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_3_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_proposal_4_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_state_ts_4_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_4_n0 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_proposal_4_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_state_ts_4_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n1_vote_ts_4_n1 : [MIN_TS_VALUE..MAX_TS] init INVALID;
 
     // pkt to send
     n1_send_ready : bool init false; // ready means not yet sent
@@ -458,7 +461,7 @@ module node1
     n1_send_type : [0..NUM_CMD_TYPES] init 0;
     n1_send_seq : [0..LOG_SIZE] init 0;
     n1_send_round : [0..MAX_ROUND] init 0;
-    n1_send_cmd_ts : [-2..MAX_TS] init 0;
+    n1_send_cmd_ts : [MIN_TS_VALUE..MAX_TS] init 0;
 
     // pkt received
     n1_recv_ready : bool init false; // ready means received
@@ -466,7 +469,7 @@ module node1
     n1_recv_type : [0..NUM_CMD_TYPES] init 0;
     n1_recv_seq : [0..LOG_SIZE] init 0;
     n1_recv_round : [0..MAX_ROUND] init 0;
-    n1_recv_cmd_ts : [-2..MAX_TS] init 0;
+    n1_recv_cmd_ts : [MIN_TS_VALUE..MAX_TS] init 0;
     
     // Try on each queue slot and execute if the slot has min ts
     [n1_propose_next_command_for_seq0_usingqueue0] n1_stage=p0_bc_cmd_stage & n1_send_ready=false & n1_seq=0 & n1_pq_valid_0=true & (!n1_pq_valid_0|n1_pq_ts_0>=n1_pq_ts_0)&(!n1_pq_valid_1|n1_pq_ts_1>=n1_pq_ts_0) ->         (n1_stage'=p1_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_proposal) & (n1_send_cmd_ts'=n1_pq_ts_0) & (n1_proposal_0_n1'=n1_pq_ts_0);
@@ -570,43 +573,43 @@ module node1
     // Try to assign the state using the state from node 0 for seq 0 when we have enough states.
     [n1_process_state_assign_vote_0_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_0_n0!=INVALID&n1_state_ts_0_n1!=INVALID) & n1_state_ts_0_n0=n1_state_ts_0_n1 ->         (n1_vote_ts_0_n1'=n1_state_ts_0_n0) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=n1_state_ts_0_n0);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n1_process_state_assign_vote_0_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_0_n0!=INVALID&n1_state_ts_0_n1!=INVALID) & (n1_state_ts_0_n0!=n1_state_ts_0_n1) ->         (n1_vote_ts_0_n1'=BOT) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
+    [n1_process_state_assign_vote_0_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_0_n0!=INVALID&n1_state_ts_0_n1!=INVALID) & (n1_state_ts_0_n0!=n1_state_ts_0_n1) ->         (n1_vote_ts_0_n1'=QUES_VOTE) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 1 for seq 0 when we have enough states.
     [n1_process_state_assign_vote_0_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_0_n0!=INVALID&n1_state_ts_0_n1!=INVALID) & n1_state_ts_0_n0=n1_state_ts_0_n1 ->         (n1_vote_ts_0_n1'=n1_state_ts_0_n1) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=n1_state_ts_0_n1);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n1_process_state_assign_vote_0_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_0_n0!=INVALID&n1_state_ts_0_n1!=INVALID) & (n1_state_ts_0_n0!=n1_state_ts_0_n1) ->         (n1_vote_ts_0_n1'=BOT) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
+    [n1_process_state_assign_vote_0_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_0_n0!=INVALID&n1_state_ts_0_n1!=INVALID) & (n1_state_ts_0_n0!=n1_state_ts_0_n1) ->         (n1_vote_ts_0_n1'=QUES_VOTE) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 0 for seq 1 when we have enough states.
     [n1_process_state_assign_vote_1_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_1_n0!=INVALID&n1_state_ts_1_n1!=INVALID) & n1_state_ts_1_n0=n1_state_ts_1_n1 ->         (n1_vote_ts_1_n1'=n1_state_ts_1_n0) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=n1_state_ts_1_n0);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n1_process_state_assign_vote_1_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_1_n0!=INVALID&n1_state_ts_1_n1!=INVALID) & (n1_state_ts_1_n0!=n1_state_ts_1_n1) ->         (n1_vote_ts_1_n1'=BOT) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
+    [n1_process_state_assign_vote_1_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_1_n0!=INVALID&n1_state_ts_1_n1!=INVALID) & (n1_state_ts_1_n0!=n1_state_ts_1_n1) ->         (n1_vote_ts_1_n1'=QUES_VOTE) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 1 for seq 1 when we have enough states.
     [n1_process_state_assign_vote_1_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_1_n0!=INVALID&n1_state_ts_1_n1!=INVALID) & n1_state_ts_1_n0=n1_state_ts_1_n1 ->         (n1_vote_ts_1_n1'=n1_state_ts_1_n1) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=n1_state_ts_1_n1);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n1_process_state_assign_vote_1_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_1_n0!=INVALID&n1_state_ts_1_n1!=INVALID) & (n1_state_ts_1_n0!=n1_state_ts_1_n1) ->         (n1_vote_ts_1_n1'=BOT) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
+    [n1_process_state_assign_vote_1_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_1_n0!=INVALID&n1_state_ts_1_n1!=INVALID) & (n1_state_ts_1_n0!=n1_state_ts_1_n1) ->         (n1_vote_ts_1_n1'=QUES_VOTE) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 0 for seq 2 when we have enough states.
     [n1_process_state_assign_vote_2_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_2_n0!=INVALID&n1_state_ts_2_n1!=INVALID) & n1_state_ts_2_n0=n1_state_ts_2_n1 ->         (n1_vote_ts_2_n1'=n1_state_ts_2_n0) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=n1_state_ts_2_n0);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n1_process_state_assign_vote_2_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_2_n0!=INVALID&n1_state_ts_2_n1!=INVALID) & (n1_state_ts_2_n0!=n1_state_ts_2_n1) ->         (n1_vote_ts_2_n1'=BOT) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
+    [n1_process_state_assign_vote_2_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_2_n0!=INVALID&n1_state_ts_2_n1!=INVALID) & (n1_state_ts_2_n0!=n1_state_ts_2_n1) ->         (n1_vote_ts_2_n1'=QUES_VOTE) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 1 for seq 2 when we have enough states.
     [n1_process_state_assign_vote_2_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_2_n0!=INVALID&n1_state_ts_2_n1!=INVALID) & n1_state_ts_2_n0=n1_state_ts_2_n1 ->         (n1_vote_ts_2_n1'=n1_state_ts_2_n1) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=n1_state_ts_2_n1);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n1_process_state_assign_vote_2_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_2_n0!=INVALID&n1_state_ts_2_n1!=INVALID) & (n1_state_ts_2_n0!=n1_state_ts_2_n1) ->         (n1_vote_ts_2_n1'=BOT) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
+    [n1_process_state_assign_vote_2_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_2_n0!=INVALID&n1_state_ts_2_n1!=INVALID) & (n1_state_ts_2_n0!=n1_state_ts_2_n1) ->         (n1_vote_ts_2_n1'=QUES_VOTE) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 0 for seq 3 when we have enough states.
     [n1_process_state_assign_vote_3_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_3_n0!=INVALID&n1_state_ts_3_n1!=INVALID) & n1_state_ts_3_n0=n1_state_ts_3_n1 ->         (n1_vote_ts_3_n1'=n1_state_ts_3_n0) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=n1_state_ts_3_n0);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n1_process_state_assign_vote_3_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_3_n0!=INVALID&n1_state_ts_3_n1!=INVALID) & (n1_state_ts_3_n0!=n1_state_ts_3_n1) ->         (n1_vote_ts_3_n1'=BOT) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
+    [n1_process_state_assign_vote_3_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_3_n0!=INVALID&n1_state_ts_3_n1!=INVALID) & (n1_state_ts_3_n0!=n1_state_ts_3_n1) ->         (n1_vote_ts_3_n1'=QUES_VOTE) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 1 for seq 3 when we have enough states.
     [n1_process_state_assign_vote_3_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_3_n0!=INVALID&n1_state_ts_3_n1!=INVALID) & n1_state_ts_3_n0=n1_state_ts_3_n1 ->         (n1_vote_ts_3_n1'=n1_state_ts_3_n1) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=n1_state_ts_3_n1);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n1_process_state_assign_vote_3_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_3_n0!=INVALID&n1_state_ts_3_n1!=INVALID) & (n1_state_ts_3_n0!=n1_state_ts_3_n1) ->         (n1_vote_ts_3_n1'=BOT) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
+    [n1_process_state_assign_vote_3_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_3_n0!=INVALID&n1_state_ts_3_n1!=INVALID) & (n1_state_ts_3_n0!=n1_state_ts_3_n1) ->         (n1_vote_ts_3_n1'=QUES_VOTE) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 0 for seq 4 when we have enough states.
     [n1_process_state_assign_vote_4_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_4_n0!=INVALID&n1_state_ts_4_n1!=INVALID) & n1_state_ts_4_n0=n1_state_ts_4_n1 ->         (n1_vote_ts_4_n1'=n1_state_ts_4_n0) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=n1_state_ts_4_n0);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n1_process_state_assign_vote_4_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_4_n0!=INVALID&n1_state_ts_4_n1!=INVALID) & (n1_state_ts_4_n0!=n1_state_ts_4_n1) ->         (n1_vote_ts_4_n1'=BOT) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
+    [n1_process_state_assign_vote_4_using_n0] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_4_n0!=INVALID&n1_state_ts_4_n1!=INVALID) & (n1_state_ts_4_n0!=n1_state_ts_4_n1) ->         (n1_vote_ts_4_n1'=QUES_VOTE) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
     // Try to assign the state using the state from node 1 for seq 4 when we have enough states.
     [n1_process_state_assign_vote_4_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_4_n0!=INVALID&n1_state_ts_4_n1!=INVALID) & n1_state_ts_4_n0=n1_state_ts_4_n1 ->         (n1_vote_ts_4_n1'=n1_state_ts_4_n1) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=n1_state_ts_4_n1);
     // We got enough states but no enough same states, thus assigning BOT.
-    [n1_process_state_assign_vote_4_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_4_n0!=INVALID&n1_state_ts_4_n1!=INVALID) & (n1_state_ts_4_n0!=n1_state_ts_4_n1) ->         (n1_vote_ts_4_n1'=BOT) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
+    [n1_process_state_assign_vote_4_using_n1] n1_stage=p2s_stage & n1_send_ready=false & (n1_state_ts_4_n0!=INVALID&n1_state_ts_4_n1!=INVALID) & (n1_state_ts_4_n0!=n1_state_ts_4_n1) ->         (n1_vote_ts_4_n1'=QUES_VOTE) & (n1_stage'=p2v_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_vote) & (n1_send_cmd_ts'=BOT);
 
     // Process when a Vote pkt is ready.
     
@@ -632,85 +635,85 @@ module node1
     [n1_process_vote_from_n1_for_seq4] n1_stage=p2v_stage & n1_recv_ready=true & n1_recv_from=1 & n1_recv_type=cmd_vote & n1_recv_seq=4 ->         (n1_recv_ready'=false) & (n1_vote_ts_4_n1'=n1_recv_cmd_ts);
     // TODO: here is a hack using n{_}_vote_ts_i_n{_}=n{_}_vote_ts_i_n1 for two nodes scenario.
     // Try to use the vote from node 0 for seq 0 when we have enough same votes.
-    [n1_process_vote_for_seq0_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0=n1_vote_ts_0_n1 & n1_vote_ts_0_n0!=BOT) ->         (n1_log_ts_0'=n1_vote_ts_0_n0) & (n1_stage'=p1_stage) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n1_process_vote_for_seq0_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0!=n1_vote_ts_0_n1 & n1_vote_ts_0_n0!=BOT) ->         (n1_state_ts_0_n1'=n1_vote_ts_0_n1) & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_0_n1) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
-    [n1_process_vote_for_seq0_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0!=n1_vote_ts_0_n1 & n1_vote_ts_0_n1!=BOT) ->         (n1_state_ts_0_n1'=n1_vote_ts_0_n1) & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_0_n1) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
-    // We only got BOT, let god decides.
-    [n1_process_vote_for_seq0_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0=n1_vote_ts_0_n1 & n1_vote_ts_0_n1=BOT & n1_state_ts_0_n0!=INVALID & n1_state_ts_0_n0!=BOT) ->         (n1_state_ts_0_n1'=BOT)                      & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
-    [n1_process_vote_for_seq0_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0=n1_vote_ts_0_n1 & n1_vote_ts_0_n1=BOT & n1_state_ts_0_n0!=INVALID & n1_state_ts_0_n0!=BOT) ->         (n1_state_ts_0_n1'=n1_state_ts_0_n0) & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_0_n0) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
+    [n1_process_vote_for_seq0_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0=n1_vote_ts_0_n1 & n1_vote_ts_0_n0!=QUES_VOTE) ->         (n1_log_ts_0'=n1_vote_ts_0_n0) & (n1_stage'=p1_stage) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n1_process_vote_for_seq0_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0!=n1_vote_ts_0_n1 & n1_vote_ts_0_n0!=QUES_VOTE) ->         (n1_state_ts_0_n1'=n1_vote_ts_0_n0) & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_0_n1) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
+    [n1_process_vote_for_seq0_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0!=n1_vote_ts_0_n1 & n1_vote_ts_0_n1!=QUES_VOTE) ->         (n1_state_ts_0_n1'=n1_vote_ts_0_n1) & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_0_n1) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n1_process_vote_for_seq0_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0=n1_vote_ts_0_n1 & n1_vote_ts_0_n0=QUES_VOTE & n1_state_ts_0_n0!=INVALID) ->         (n1_state_ts_0_n1'=BOT)                      & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
+    [n1_process_vote_for_seq0_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0=n1_vote_ts_0_n1 & n1_vote_ts_0_n0=QUES_VOTE & n1_state_ts_0_n0!=INVALID) ->         (n1_state_ts_0_n1'=n1_state_ts_0_n0) & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_0_n0) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
     // Try to use the vote from node 1 for seq 0 when we have enough same votes.
-    [n1_process_vote_for_seq0_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0=n1_vote_ts_0_n1 & n1_vote_ts_0_n0!=BOT) ->         (n1_log_ts_0'=n1_vote_ts_0_n1) & (n1_stage'=p1_stage) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n1_process_vote_for_seq0_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0!=n1_vote_ts_0_n1 & n1_vote_ts_0_n0!=BOT) ->         (n1_state_ts_0_n1'=n1_vote_ts_0_n1) & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_0_n1) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
-    [n1_process_vote_for_seq0_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0!=n1_vote_ts_0_n1 & n1_vote_ts_0_n1!=BOT) ->         (n1_state_ts_0_n1'=n1_vote_ts_0_n1) & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_0_n1) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
-    // We only got BOT, let god decides.
-    [n1_process_vote_for_seq0_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0=n1_vote_ts_0_n1 & n1_vote_ts_0_n1=BOT & n1_state_ts_0_n1!=INVALID & n1_state_ts_0_n1!=BOT) ->         (n1_state_ts_0_n1'=BOT)                      & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
-    [n1_process_vote_for_seq0_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0=n1_vote_ts_0_n1 & n1_vote_ts_0_n1=BOT & n1_state_ts_0_n1!=INVALID & n1_state_ts_0_n1!=BOT) ->         (n1_state_ts_0_n1'=n1_state_ts_0_n1) & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_0_n1) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
+    [n1_process_vote_for_seq0_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0=n1_vote_ts_0_n1 & n1_vote_ts_0_n0!=QUES_VOTE) ->         (n1_log_ts_0'=n1_vote_ts_0_n1) & (n1_stage'=p1_stage) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n1_process_vote_for_seq0_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0!=n1_vote_ts_0_n1 & n1_vote_ts_0_n0!=QUES_VOTE) ->         (n1_state_ts_0_n1'=n1_vote_ts_0_n0) & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_0_n1) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
+    [n1_process_vote_for_seq0_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0!=n1_vote_ts_0_n1 & n1_vote_ts_0_n1!=QUES_VOTE) ->         (n1_state_ts_0_n1'=n1_vote_ts_0_n1) & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_0_n1) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n1_process_vote_for_seq0_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0=n1_vote_ts_0_n1 & n1_vote_ts_0_n0=QUES_VOTE & n1_state_ts_0_n1!=INVALID) ->         (n1_state_ts_0_n1'=BOT)                      & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
+    [n1_process_vote_for_seq0_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_0_n0!=INVALID&n1_vote_ts_0_n1!=INVALID & (n1_vote_ts_0_n0=n1_vote_ts_0_n1 & n1_vote_ts_0_n0=QUES_VOTE & n1_state_ts_0_n1!=INVALID) ->         (n1_state_ts_0_n1'=n1_state_ts_0_n1) & (n1_vote_ts_0_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_0_n1) & (n1_state_ts_0_n0'=INVALID)&(n1_vote_ts_0_n0'=INVALID);
     // Try to use the vote from node 0 for seq 1 when we have enough same votes.
-    [n1_process_vote_for_seq1_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0=n1_vote_ts_1_n1 & n1_vote_ts_1_n0!=BOT) ->         (n1_log_ts_1'=n1_vote_ts_1_n0) & (n1_stage'=p1_stage) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n1_process_vote_for_seq1_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0!=n1_vote_ts_1_n1 & n1_vote_ts_1_n0!=BOT) ->         (n1_state_ts_1_n1'=n1_vote_ts_1_n1) & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_1_n1) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
-    [n1_process_vote_for_seq1_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0!=n1_vote_ts_1_n1 & n1_vote_ts_1_n1!=BOT) ->         (n1_state_ts_1_n1'=n1_vote_ts_1_n1) & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_1_n1) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
-    // We only got BOT, let god decides.
-    [n1_process_vote_for_seq1_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0=n1_vote_ts_1_n1 & n1_vote_ts_1_n1=BOT & n1_state_ts_1_n0!=INVALID & n1_state_ts_1_n0!=BOT) ->         (n1_state_ts_1_n1'=BOT)                      & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
-    [n1_process_vote_for_seq1_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0=n1_vote_ts_1_n1 & n1_vote_ts_1_n1=BOT & n1_state_ts_1_n0!=INVALID & n1_state_ts_1_n0!=BOT) ->         (n1_state_ts_1_n1'=n1_state_ts_1_n0) & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_1_n0) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
+    [n1_process_vote_for_seq1_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0=n1_vote_ts_1_n1 & n1_vote_ts_1_n0!=QUES_VOTE) ->         (n1_log_ts_1'=n1_vote_ts_1_n0) & (n1_stage'=p1_stage) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n1_process_vote_for_seq1_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0!=n1_vote_ts_1_n1 & n1_vote_ts_1_n0!=QUES_VOTE) ->         (n1_state_ts_1_n1'=n1_vote_ts_1_n0) & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_1_n1) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
+    [n1_process_vote_for_seq1_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0!=n1_vote_ts_1_n1 & n1_vote_ts_1_n1!=QUES_VOTE) ->         (n1_state_ts_1_n1'=n1_vote_ts_1_n1) & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_1_n1) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n1_process_vote_for_seq1_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0=n1_vote_ts_1_n1 & n1_vote_ts_1_n0=QUES_VOTE & n1_state_ts_1_n0!=INVALID) ->         (n1_state_ts_1_n1'=BOT)                      & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
+    [n1_process_vote_for_seq1_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0=n1_vote_ts_1_n1 & n1_vote_ts_1_n0=QUES_VOTE & n1_state_ts_1_n0!=INVALID) ->         (n1_state_ts_1_n1'=n1_state_ts_1_n0) & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_1_n0) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
     // Try to use the vote from node 1 for seq 1 when we have enough same votes.
-    [n1_process_vote_for_seq1_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0=n1_vote_ts_1_n1 & n1_vote_ts_1_n0!=BOT) ->         (n1_log_ts_1'=n1_vote_ts_1_n1) & (n1_stage'=p1_stage) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n1_process_vote_for_seq1_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0!=n1_vote_ts_1_n1 & n1_vote_ts_1_n0!=BOT) ->         (n1_state_ts_1_n1'=n1_vote_ts_1_n1) & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_1_n1) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
-    [n1_process_vote_for_seq1_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0!=n1_vote_ts_1_n1 & n1_vote_ts_1_n1!=BOT) ->         (n1_state_ts_1_n1'=n1_vote_ts_1_n1) & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_1_n1) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
-    // We only got BOT, let god decides.
-    [n1_process_vote_for_seq1_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0=n1_vote_ts_1_n1 & n1_vote_ts_1_n1=BOT & n1_state_ts_1_n1!=INVALID & n1_state_ts_1_n1!=BOT) ->         (n1_state_ts_1_n1'=BOT)                      & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
-    [n1_process_vote_for_seq1_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0=n1_vote_ts_1_n1 & n1_vote_ts_1_n1=BOT & n1_state_ts_1_n1!=INVALID & n1_state_ts_1_n1!=BOT) ->         (n1_state_ts_1_n1'=n1_state_ts_1_n1) & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_1_n1) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
+    [n1_process_vote_for_seq1_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0=n1_vote_ts_1_n1 & n1_vote_ts_1_n0!=QUES_VOTE) ->         (n1_log_ts_1'=n1_vote_ts_1_n1) & (n1_stage'=p1_stage) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n1_process_vote_for_seq1_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0!=n1_vote_ts_1_n1 & n1_vote_ts_1_n0!=QUES_VOTE) ->         (n1_state_ts_1_n1'=n1_vote_ts_1_n0) & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_1_n1) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
+    [n1_process_vote_for_seq1_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0!=n1_vote_ts_1_n1 & n1_vote_ts_1_n1!=QUES_VOTE) ->         (n1_state_ts_1_n1'=n1_vote_ts_1_n1) & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_1_n1) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n1_process_vote_for_seq1_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0=n1_vote_ts_1_n1 & n1_vote_ts_1_n0=QUES_VOTE & n1_state_ts_1_n1!=INVALID) ->         (n1_state_ts_1_n1'=BOT)                      & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
+    [n1_process_vote_for_seq1_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_1_n0!=INVALID&n1_vote_ts_1_n1!=INVALID & (n1_vote_ts_1_n0=n1_vote_ts_1_n1 & n1_vote_ts_1_n0=QUES_VOTE & n1_state_ts_1_n1!=INVALID) ->         (n1_state_ts_1_n1'=n1_state_ts_1_n1) & (n1_vote_ts_1_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_1_n1) & (n1_state_ts_1_n0'=INVALID)&(n1_vote_ts_1_n0'=INVALID);
     // Try to use the vote from node 0 for seq 2 when we have enough same votes.
-    [n1_process_vote_for_seq2_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0=n1_vote_ts_2_n1 & n1_vote_ts_2_n0!=BOT) ->         (n1_log_ts_2'=n1_vote_ts_2_n0) & (n1_stage'=p1_stage) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n1_process_vote_for_seq2_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0!=n1_vote_ts_2_n1 & n1_vote_ts_2_n0!=BOT) ->         (n1_state_ts_2_n1'=n1_vote_ts_2_n1) & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_2_n1) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
-    [n1_process_vote_for_seq2_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0!=n1_vote_ts_2_n1 & n1_vote_ts_2_n1!=BOT) ->         (n1_state_ts_2_n1'=n1_vote_ts_2_n1) & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_2_n1) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
-    // We only got BOT, let god decides.
-    [n1_process_vote_for_seq2_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0=n1_vote_ts_2_n1 & n1_vote_ts_2_n1=BOT & n1_state_ts_2_n0!=INVALID & n1_state_ts_2_n0!=BOT) ->         (n1_state_ts_2_n1'=BOT)                      & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
-    [n1_process_vote_for_seq2_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0=n1_vote_ts_2_n1 & n1_vote_ts_2_n1=BOT & n1_state_ts_2_n0!=INVALID & n1_state_ts_2_n0!=BOT) ->         (n1_state_ts_2_n1'=n1_state_ts_2_n0) & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_2_n0) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
+    [n1_process_vote_for_seq2_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0=n1_vote_ts_2_n1 & n1_vote_ts_2_n0!=QUES_VOTE) ->         (n1_log_ts_2'=n1_vote_ts_2_n0) & (n1_stage'=p1_stage) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n1_process_vote_for_seq2_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0!=n1_vote_ts_2_n1 & n1_vote_ts_2_n0!=QUES_VOTE) ->         (n1_state_ts_2_n1'=n1_vote_ts_2_n0) & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_2_n1) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
+    [n1_process_vote_for_seq2_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0!=n1_vote_ts_2_n1 & n1_vote_ts_2_n1!=QUES_VOTE) ->         (n1_state_ts_2_n1'=n1_vote_ts_2_n1) & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_2_n1) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n1_process_vote_for_seq2_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0=n1_vote_ts_2_n1 & n1_vote_ts_2_n0=QUES_VOTE & n1_state_ts_2_n0!=INVALID) ->         (n1_state_ts_2_n1'=BOT)                      & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
+    [n1_process_vote_for_seq2_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0=n1_vote_ts_2_n1 & n1_vote_ts_2_n0=QUES_VOTE & n1_state_ts_2_n0!=INVALID) ->         (n1_state_ts_2_n1'=n1_state_ts_2_n0) & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_2_n0) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
     // Try to use the vote from node 1 for seq 2 when we have enough same votes.
-    [n1_process_vote_for_seq2_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0=n1_vote_ts_2_n1 & n1_vote_ts_2_n0!=BOT) ->         (n1_log_ts_2'=n1_vote_ts_2_n1) & (n1_stage'=p1_stage) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n1_process_vote_for_seq2_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0!=n1_vote_ts_2_n1 & n1_vote_ts_2_n0!=BOT) ->         (n1_state_ts_2_n1'=n1_vote_ts_2_n1) & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_2_n1) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
-    [n1_process_vote_for_seq2_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0!=n1_vote_ts_2_n1 & n1_vote_ts_2_n1!=BOT) ->         (n1_state_ts_2_n1'=n1_vote_ts_2_n1) & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_2_n1) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
-    // We only got BOT, let god decides.
-    [n1_process_vote_for_seq2_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0=n1_vote_ts_2_n1 & n1_vote_ts_2_n1=BOT & n1_state_ts_2_n1!=INVALID & n1_state_ts_2_n1!=BOT) ->         (n1_state_ts_2_n1'=BOT)                      & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
-    [n1_process_vote_for_seq2_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0=n1_vote_ts_2_n1 & n1_vote_ts_2_n1=BOT & n1_state_ts_2_n1!=INVALID & n1_state_ts_2_n1!=BOT) ->         (n1_state_ts_2_n1'=n1_state_ts_2_n1) & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_2_n1) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
+    [n1_process_vote_for_seq2_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0=n1_vote_ts_2_n1 & n1_vote_ts_2_n0!=QUES_VOTE) ->         (n1_log_ts_2'=n1_vote_ts_2_n1) & (n1_stage'=p1_stage) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n1_process_vote_for_seq2_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0!=n1_vote_ts_2_n1 & n1_vote_ts_2_n0!=QUES_VOTE) ->         (n1_state_ts_2_n1'=n1_vote_ts_2_n0) & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_2_n1) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
+    [n1_process_vote_for_seq2_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0!=n1_vote_ts_2_n1 & n1_vote_ts_2_n1!=QUES_VOTE) ->         (n1_state_ts_2_n1'=n1_vote_ts_2_n1) & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_2_n1) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n1_process_vote_for_seq2_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0=n1_vote_ts_2_n1 & n1_vote_ts_2_n0=QUES_VOTE & n1_state_ts_2_n1!=INVALID) ->         (n1_state_ts_2_n1'=BOT)                      & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
+    [n1_process_vote_for_seq2_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_2_n0!=INVALID&n1_vote_ts_2_n1!=INVALID & (n1_vote_ts_2_n0=n1_vote_ts_2_n1 & n1_vote_ts_2_n0=QUES_VOTE & n1_state_ts_2_n1!=INVALID) ->         (n1_state_ts_2_n1'=n1_state_ts_2_n1) & (n1_vote_ts_2_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_2_n1) & (n1_state_ts_2_n0'=INVALID)&(n1_vote_ts_2_n0'=INVALID);
     // Try to use the vote from node 0 for seq 3 when we have enough same votes.
-    [n1_process_vote_for_seq3_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0=n1_vote_ts_3_n1 & n1_vote_ts_3_n0!=BOT) ->         (n1_log_ts_3'=n1_vote_ts_3_n0) & (n1_stage'=p1_stage) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n1_process_vote_for_seq3_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0!=n1_vote_ts_3_n1 & n1_vote_ts_3_n0!=BOT) ->         (n1_state_ts_3_n1'=n1_vote_ts_3_n1) & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_3_n1) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
-    [n1_process_vote_for_seq3_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0!=n1_vote_ts_3_n1 & n1_vote_ts_3_n1!=BOT) ->         (n1_state_ts_3_n1'=n1_vote_ts_3_n1) & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_3_n1) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
-    // We only got BOT, let god decides.
-    [n1_process_vote_for_seq3_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0=n1_vote_ts_3_n1 & n1_vote_ts_3_n1=BOT & n1_state_ts_3_n0!=INVALID & n1_state_ts_3_n0!=BOT) ->         (n1_state_ts_3_n1'=BOT)                      & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
-    [n1_process_vote_for_seq3_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0=n1_vote_ts_3_n1 & n1_vote_ts_3_n1=BOT & n1_state_ts_3_n0!=INVALID & n1_state_ts_3_n0!=BOT) ->         (n1_state_ts_3_n1'=n1_state_ts_3_n0) & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_3_n0) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
+    [n1_process_vote_for_seq3_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0=n1_vote_ts_3_n1 & n1_vote_ts_3_n0!=QUES_VOTE) ->         (n1_log_ts_3'=n1_vote_ts_3_n0) & (n1_stage'=p1_stage) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n1_process_vote_for_seq3_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0!=n1_vote_ts_3_n1 & n1_vote_ts_3_n0!=QUES_VOTE) ->         (n1_state_ts_3_n1'=n1_vote_ts_3_n0) & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_3_n1) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
+    [n1_process_vote_for_seq3_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0!=n1_vote_ts_3_n1 & n1_vote_ts_3_n1!=QUES_VOTE) ->         (n1_state_ts_3_n1'=n1_vote_ts_3_n1) & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_3_n1) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n1_process_vote_for_seq3_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0=n1_vote_ts_3_n1 & n1_vote_ts_3_n0=QUES_VOTE & n1_state_ts_3_n0!=INVALID) ->         (n1_state_ts_3_n1'=BOT)                      & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
+    [n1_process_vote_for_seq3_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0=n1_vote_ts_3_n1 & n1_vote_ts_3_n0=QUES_VOTE & n1_state_ts_3_n0!=INVALID) ->         (n1_state_ts_3_n1'=n1_state_ts_3_n0) & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_3_n0) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
     // Try to use the vote from node 1 for seq 3 when we have enough same votes.
-    [n1_process_vote_for_seq3_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0=n1_vote_ts_3_n1 & n1_vote_ts_3_n0!=BOT) ->         (n1_log_ts_3'=n1_vote_ts_3_n1) & (n1_stage'=p1_stage) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n1_process_vote_for_seq3_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0!=n1_vote_ts_3_n1 & n1_vote_ts_3_n0!=BOT) ->         (n1_state_ts_3_n1'=n1_vote_ts_3_n1) & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_3_n1) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
-    [n1_process_vote_for_seq3_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0!=n1_vote_ts_3_n1 & n1_vote_ts_3_n1!=BOT) ->         (n1_state_ts_3_n1'=n1_vote_ts_3_n1) & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_3_n1) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
-    // We only got BOT, let god decides.
-    [n1_process_vote_for_seq3_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0=n1_vote_ts_3_n1 & n1_vote_ts_3_n1=BOT & n1_state_ts_3_n1!=INVALID & n1_state_ts_3_n1!=BOT) ->         (n1_state_ts_3_n1'=BOT)                      & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
-    [n1_process_vote_for_seq3_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0=n1_vote_ts_3_n1 & n1_vote_ts_3_n1=BOT & n1_state_ts_3_n1!=INVALID & n1_state_ts_3_n1!=BOT) ->         (n1_state_ts_3_n1'=n1_state_ts_3_n1) & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_3_n1) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
+    [n1_process_vote_for_seq3_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0=n1_vote_ts_3_n1 & n1_vote_ts_3_n0!=QUES_VOTE) ->         (n1_log_ts_3'=n1_vote_ts_3_n1) & (n1_stage'=p1_stage) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n1_process_vote_for_seq3_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0!=n1_vote_ts_3_n1 & n1_vote_ts_3_n0!=QUES_VOTE) ->         (n1_state_ts_3_n1'=n1_vote_ts_3_n0) & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_3_n1) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
+    [n1_process_vote_for_seq3_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0!=n1_vote_ts_3_n1 & n1_vote_ts_3_n1!=QUES_VOTE) ->         (n1_state_ts_3_n1'=n1_vote_ts_3_n1) & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_3_n1) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n1_process_vote_for_seq3_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0=n1_vote_ts_3_n1 & n1_vote_ts_3_n0=QUES_VOTE & n1_state_ts_3_n1!=INVALID) ->         (n1_state_ts_3_n1'=BOT)                      & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
+    [n1_process_vote_for_seq3_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_3_n0!=INVALID&n1_vote_ts_3_n1!=INVALID & (n1_vote_ts_3_n0=n1_vote_ts_3_n1 & n1_vote_ts_3_n0=QUES_VOTE & n1_state_ts_3_n1!=INVALID) ->         (n1_state_ts_3_n1'=n1_state_ts_3_n1) & (n1_vote_ts_3_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_3_n1) & (n1_state_ts_3_n0'=INVALID)&(n1_vote_ts_3_n0'=INVALID);
     // Try to use the vote from node 0 for seq 4 when we have enough same votes.
-    [n1_process_vote_for_seq4_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0=n1_vote_ts_4_n1 & n1_vote_ts_4_n0!=BOT) ->         (n1_log_ts_4'=n1_vote_ts_4_n0) & (n1_stage'=p1_stage) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n1_process_vote_for_seq4_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0!=n1_vote_ts_4_n1 & n1_vote_ts_4_n0!=BOT) ->         (n1_state_ts_4_n1'=n1_vote_ts_4_n1) & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_4_n1) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
-    [n1_process_vote_for_seq4_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0!=n1_vote_ts_4_n1 & n1_vote_ts_4_n1!=BOT) ->         (n1_state_ts_4_n1'=n1_vote_ts_4_n1) & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_4_n1) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
-    // We only got BOT, let god decides.
-    [n1_process_vote_for_seq4_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0=n1_vote_ts_4_n1 & n1_vote_ts_4_n1=BOT & n1_state_ts_4_n0!=INVALID & n1_state_ts_4_n0!=BOT) ->         (n1_state_ts_4_n1'=BOT)                      & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
-    [n1_process_vote_for_seq4_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0=n1_vote_ts_4_n1 & n1_vote_ts_4_n1=BOT & n1_state_ts_4_n0!=INVALID & n1_state_ts_4_n0!=BOT) ->         (n1_state_ts_4_n1'=n1_state_ts_4_n0) & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_4_n0) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
+    [n1_process_vote_for_seq4_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0=n1_vote_ts_4_n1 & n1_vote_ts_4_n0!=QUES_VOTE) ->         (n1_log_ts_4'=n1_vote_ts_4_n0) & (n1_stage'=p1_stage) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n1_process_vote_for_seq4_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0!=n1_vote_ts_4_n1 & n1_vote_ts_4_n0!=QUES_VOTE) ->         (n1_state_ts_4_n1'=n1_vote_ts_4_n0) & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_4_n1) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
+    [n1_process_vote_for_seq4_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0!=n1_vote_ts_4_n1 & n1_vote_ts_4_n1!=QUES_VOTE) ->         (n1_state_ts_4_n1'=n1_vote_ts_4_n1) & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_4_n1) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n1_process_vote_for_seq4_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0=n1_vote_ts_4_n1 & n1_vote_ts_4_n0=QUES_VOTE & n1_state_ts_4_n0!=INVALID) ->         (n1_state_ts_4_n1'=BOT)                      & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
+    [n1_process_vote_for_seq4_using_n0] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0=n1_vote_ts_4_n1 & n1_vote_ts_4_n0=QUES_VOTE & n1_state_ts_4_n0!=INVALID) ->         (n1_state_ts_4_n1'=n1_state_ts_4_n0) & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_4_n0) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
     // Try to use the vote from node 1 for seq 4 when we have enough same votes.
-    [n1_process_vote_for_seq4_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0=n1_vote_ts_4_n1 & n1_vote_ts_4_n0!=BOT) ->         (n1_log_ts_4'=n1_vote_ts_4_n1) & (n1_stage'=p1_stage) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
-    // We don't have enough same votes, but we have some vote that is not BOT.
-    [n1_process_vote_for_seq4_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0!=n1_vote_ts_4_n1 & n1_vote_ts_4_n0!=BOT) ->         (n1_state_ts_4_n1'=n1_vote_ts_4_n1) & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_4_n1) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
-    [n1_process_vote_for_seq4_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0!=n1_vote_ts_4_n1 & n1_vote_ts_4_n1!=BOT) ->         (n1_state_ts_4_n1'=n1_vote_ts_4_n1) & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_4_n1) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
-    // We only got BOT, let god decides.
-    [n1_process_vote_for_seq4_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0=n1_vote_ts_4_n1 & n1_vote_ts_4_n1=BOT & n1_state_ts_4_n1!=INVALID & n1_state_ts_4_n1!=BOT) ->         (n1_state_ts_4_n1'=BOT)                      & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
-    [n1_process_vote_for_seq4_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0=n1_vote_ts_4_n1 & n1_vote_ts_4_n1=BOT & n1_state_ts_4_n1!=INVALID & n1_state_ts_4_n1!=BOT) ->         (n1_state_ts_4_n1'=n1_state_ts_4_n1) & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_4_n1) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
+    [n1_process_vote_for_seq4_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0=n1_vote_ts_4_n1 & n1_vote_ts_4_n0!=QUES_VOTE) ->         (n1_log_ts_4'=n1_vote_ts_4_n1) & (n1_stage'=p1_stage) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
+    // We don't have enough same votes, but we have some vote that is not QUES_VOTE.
+    [n1_process_vote_for_seq4_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0!=n1_vote_ts_4_n1 & n1_vote_ts_4_n0!=QUES_VOTE) ->         (n1_state_ts_4_n1'=n1_vote_ts_4_n0) & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_4_n1) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
+    [n1_process_vote_for_seq4_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0!=n1_vote_ts_4_n1 & n1_vote_ts_4_n1!=QUES_VOTE) ->         (n1_state_ts_4_n1'=n1_vote_ts_4_n1) & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_4_n1) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
+    // We only got QUES_VOTE, let god decides.
+    [n1_process_vote_for_seq4_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0=n1_vote_ts_4_n1 & n1_vote_ts_4_n0=QUES_VOTE & n1_state_ts_4_n1!=INVALID) ->         (n1_state_ts_4_n1'=BOT)                      & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=BOT)                      & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
+    [n1_process_vote_for_seq4_using_n1] n1_stage=p2v_stage & n1_send_ready=false & n1_vote_ts_4_n0!=INVALID&n1_vote_ts_4_n1!=INVALID & (n1_vote_ts_4_n0=n1_vote_ts_4_n1 & n1_vote_ts_4_n0=QUES_VOTE & n1_state_ts_4_n1!=INVALID) ->         (n1_state_ts_4_n1'=n1_state_ts_4_n1) & (n1_vote_ts_4_n1'=INVALID) & (n1_stage'=p2s_stage) & (n1_send_ready'=true) & (n1_send_is_broadcast'=true) & (n1_send_type'=cmd_state) & (n1_send_cmd_ts'=n1_state_ts_4_n1) & (n1_state_ts_4_n0'=INVALID)&(n1_vote_ts_4_n0'=INVALID);
 
     // Send when a pkt is ready; Recv when a pkt is ready.
     [recv_01_0] n1_recv_ready=false ->         (n1_recv_ready'=true) & (n1_recv_from'=0) & (n1_recv_type'=w01_pkt_type_0) & (n1_recv_seq'=w01_pkt_seq_0) & (n1_recv_round'=w01_pkt_round_0) & (n1_recv_cmd_ts'=w01_pkt_cmd_ts_0);
