@@ -5,9 +5,9 @@ import itertools
     
 
 buf_size = 3
-num_nodes = 3
+num_nodes = 2
 quorum_size = num_nodes//2+1
-log_size = 3
+log_size = 1
 queue_size = 2
 max_round = 2
 
@@ -61,6 +61,7 @@ const p1_stage = 1;
 const p2s_stage = 2;
 const p2v_stage = 3;
 const decided = 4;
+const NUM_STATES = 5
 
 const cmd_request = 0;
 const cmd_proposal = 1;
@@ -80,18 +81,17 @@ const MIN_TS_VALUE=-3;
 node_code = [f"""
 module node{_}
     // states
-	n{_}_stage : [0..5] init p0_bc_cmd_stage;
-    /// p1 stage
-    n{_}_seq : [0..LOG_SIZE] init 0;""" + ''.join([f"""
+    n{_}_seq : [0..LOG_SIZE] init 0;
+    /// p1 stage""" + ''.join([f"""
+    n{_}_stage_{i} : [0..NUM_STATES] init p0_bc_cmd_stage;
     n{_}_pq_valid_{i} : bool init {"true" if i == 0 else "false"};
     n{_}_pq_ts_{i} : [0..MAX_TS] init {(1 if _ < 2 else 2) if i == 0 else 0};""" for i in range(queue_size)]) + ''.join([f"""
     n{_}_log_ts_{i} : [MIN_TS_VALUE..LOG_SIZE] init INVALID; """ for i in range(log_size)]) + """
     /// p2 stage""" + ''.join([f"""
-    n{_}_round_{i} : [0..MAX_ROUND] init 0; 
-    n{_}_my_proposal_{i} : [0..MAX_TS] init 0;""" for i in range(log_size)]) + ''.join([f"""
-    n{_}_proposal_{i}_n{nid} : [MIN_TS_VALUE..MAX_TS] init INVALID;
-    n{_}_state_ts_{i}_n{nid} : [MIN_TS_VALUE..MAX_TS] init INVALID;
-    n{_}_vote_ts_{i}_n{nid} : [MIN_VOTE_VALUE..MAX_TS] init INVALID;""" for i, nid in itertools.product(range(log_size), range(num_nodes))]) + f"""
+    n{_}_round_{i} : [0..MAX_ROUND] init 0; """ for i in range(log_size)]) + ''.join([f"""
+    n{_}_proposal_{seq}_n{nid} : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n{_}_state_ts_{seq}_n{nid} : [MIN_TS_VALUE..MAX_TS] init INVALID;
+    n{_}_vote_ts_{seq}_n{nid} : [MIN_VOTE_VALUE..MAX_TS] init INVALID;""" for seq, nid in itertools.product(range(log_size), range(num_nodes))]) + f"""
 
     // pkt to send
     n{_}_send_ready : bool init false; // ready means not yet sent
@@ -110,52 +110,54 @@ module node{_}
     n{_}_recv_cmd_ts : [MIN_TS_VALUE..MAX_TS] init 0;""" + """
     
     // Try on each queue slot and execute if the slot has min ts""" + ''.join([f"""
-    [n{_}_propose_next_command_for_seq{seq}_usingqueue{qid}] n{_}_stage=p0_bc_cmd_stage & n{_}_send_ready=false & n{_}_seq={seq} & n{_}_pq_valid_{qid}=true & {'&'.join([f"(!n{_}_pq_valid_{j}|n{_}_pq_ts_{j}>=n{_}_pq_ts_{qid})" for j in range(queue_size)])} -> \
-        (n{_}_stage'=p1_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_proposal) & (n{_}_send_cmd_ts'=n{_}_pq_ts_{qid}) & (n{_}_proposal_{seq}_n{_}'=n{_}_pq_ts_{qid});""" for qid, seq in itertools.product(range(queue_size), range(log_size))]) + f"""
+    [n{_}_propose_next_command_for_seq{seq}_usingqueue{qid}] n{_}_stage_{seq}=p0_bc_cmd_stage & n{_}_send_ready=false & n{_}_seq={seq} & n{_}_pq_valid_{qid}=true & {'&'.join([f"(!n{_}_pq_valid_{j}|n{_}_pq_ts_{j}>=n{_}_pq_ts_{qid})" for j in range(queue_size)])} -> \
+        (n{_}_stage_{seq}'=p1_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_proposal) & (n{_}_send_cmd_ts'=n{_}_pq_ts_{qid}) & (n{_}_proposal_{seq}_n{_}'=n{_}_pq_ts_{qid});""" for qid, seq in itertools.product(range(queue_size), range(log_size))]) + f"""
     
-    // Process when a Proposal pkt is ready.
-    [n{_}_drop_recv_if_proposal_in_p1] n{_}_stage=p1_stage & n{_}_recv_ready=true & n{_}_recv_type!=cmd_proposal -> (n{_}_recv_ready'=false);
-    """ + ''.join([f"""
+    // Process when a Proposal pkt is ready.""" + ''.join([f"""
+    // Drop a message if it is not at a correct stage (TODO: add round)
+    [n{_}_drop_recv_if_proposal_in_p1] n{_}_stage_{seq}=p1_stage & n{_}_recv_ready=true & n{_}_recv_type!=cmd_proposal -> (n{_}_recv_ready'=false);""" for seq in range(log_size)]) + ''.join([f"""
     // Try to receive the proposal from node {nid} for seq {seq}.
-    [n{_}_process_proposal_from_n{nid}_for_seq{seq}] n{_}_stage=p1_stage & n{_}_recv_ready=true & n{_}_recv_from={nid} & n{_}_recv_type=cmd_proposal & n{_}_recv_seq={seq}-> \
+    [n{_}_process_proposal_from_n{nid}_for_seq{seq}] n{_}_stage_{seq}=p1_stage & n{_}_recv_ready=true & n{_}_recv_from={nid} & n{_}_recv_type=cmd_proposal & n{_}_recv_seq={seq}-> \
         (n{_}_recv_ready'=false) & (n{_}_proposal_{seq}_n{nid}'=n{_}_recv_cmd_ts);
     // Try to assign the state using the proposal from node {nid} for seq {seq} when we have enough proposals.
-    [n{_}_process_proposal_assign_state_{seq}_using_n{nid}] n{_}_stage=p1_stage & n{_}_send_ready=false & ({quorum_valid_proposal(_, range(num_nodes), seq, quorum_size)}) & ({valid_quorum_proposal_same_as(_, nid, range(num_nodes), seq, quorum_size)}) -> \
-        (n{_}_state_ts_{seq}_n{_}'=n{_}_proposal_{seq}_n{nid}) & (n{_}_stage'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=n{_}_proposal_{seq}_n{nid});
+    [n{_}_process_proposal_assign_state_{seq}_using_n{nid}] n{_}_stage_{seq}=p1_stage & n{_}_send_ready=false & ({quorum_valid_proposal(_, range(num_nodes), seq, quorum_size)}) & ({valid_quorum_proposal_same_as(_, nid, range(num_nodes), seq, quorum_size)}) -> \
+        (n{_}_state_ts_{seq}_n{_}'=n{_}_proposal_{seq}_n{nid}) & (n{_}_stage_{seq}'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=n{_}_proposal_{seq}_n{nid});
     // We got enough proposals but no enough same proposals, thus assigning BOT. (TODO: change the action name, we may not need `_using_n{nid}` here.)
-    [n{_}_process_proposal_assign_state_{seq}_using_n{nid}] n{_}_stage=p1_stage & n{_}_send_ready=false & ({quorum_valid_proposal(_, range(num_nodes), seq, quorum_size)}) & !({valid_quorum_proposal_same_as(_, nid, range(num_nodes), seq, quorum_size)}) -> \
-        (n{_}_state_ts_{seq}_n{_}'=BOT) & (n{_}_stage'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=BOT);""" for seq, nid in itertools.product(range(log_size), range(num_nodes))]) + f"""
+    [n{_}_process_proposal_assign_state_{seq}_using_n{nid}] n{_}_stage_{seq}=p1_stage & n{_}_send_ready=false & ({quorum_valid_proposal(_, range(num_nodes), seq, quorum_size)}) & !({valid_quorum_proposal_same_as(_, nid, range(num_nodes), seq, quorum_size)}) -> \
+        (n{_}_state_ts_{seq}_n{_}'=BOT) & (n{_}_stage_{seq}'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=BOT);""" for seq, nid in itertools.product(range(log_size), range(num_nodes))]) + f"""
 
-    // Process when a State pkt is ready.
-    [n{_}_drop_recv_if_state_in_p2s] n{_}_stage=p2s_stage & n{_}_recv_ready=true & n{_}_recv_type!=cmd_state -> (n{_}_recv_ready'=false);
-    """ + ''.join([f"""
+    // Process when a State pkt is ready.""" + ''.join([f"""
+    // Drop a message if it is not at a correct stage (TODO: add round)
+    [n{_}_drop_recv_if_state_in_p2s] n{_}_stage_{seq}=p2s_stage & n{_}_recv_ready=true & n{_}_recv_type!=cmd_state -> (n{_}_recv_ready'=false);""" for seq in range(log_size)]) + ''.join([f"""
     // Try to receive the state from node {nid} for seq {seq}.
-    [n{_}_process_state_from_n{nid}_for_seq_{seq}] n{_}_stage=p2s_stage & n{_}_recv_ready=true & n{_}_recv_from={nid} & n{_}_recv_type=cmd_state & n{_}_recv_seq={seq} -> \
+    [n{_}_process_state_from_n{nid}_for_seq_{seq}] n{_}_stage_{seq}=p2s_stage & n{_}_recv_ready=true & n{_}_recv_from={nid} & n{_}_recv_type=cmd_state & n{_}_recv_seq={seq} -> \
         (n{_}_recv_ready'=false) & (n{_}_state_ts_{seq}_n{nid}'=n{_}_recv_cmd_ts);
     // Try to assign the state using the state from node {nid} for seq {seq} when we have enough states.
-    [n{_}_process_state_assign_vote_{seq}_using_n{nid}] n{_}_stage=p2s_stage & n{_}_send_ready=false & ({quorum_valid_state(_, range(num_nodes), seq, quorum_size)}) &  ({valid_quorum_state_same_as(_, nid, range(num_nodes), seq, quorum_size)}) -> \
-        (n{_}_vote_ts_{seq}_n{_}'=n{_}_state_ts_{seq}_n{nid}) & (n{_}_stage'=p2v_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_vote) & (n{_}_send_cmd_ts'=n{_}_state_ts_{seq}_n{nid});
+    [n{_}_process_state_assign_vote_{seq}_using_n{nid}] n{_}_stage_{seq}=p2s_stage & n{_}_send_ready=false & ({quorum_valid_state(_, range(num_nodes), seq, quorum_size)}) &  ({valid_quorum_state_same_as(_, nid, range(num_nodes), seq, quorum_size)}) -> \
+        (n{_}_vote_ts_{seq}_n{_}'=n{_}_state_ts_{seq}_n{nid}) & (n{_}_stage_{seq}'=p2v_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_vote) & (n{_}_send_cmd_ts'=n{_}_state_ts_{seq}_n{nid});
     // We got enough states but no enough same states, thus assigning BOT.
-    [n{_}_process_state_assign_vote_{seq}_using_n{nid}] n{_}_stage=p2s_stage & n{_}_send_ready=false & ({quorum_valid_state(_, range(num_nodes), seq, quorum_size)}) & !({valid_quorum_state_same_as(_, nid, range(num_nodes), seq, quorum_size)}) -> \
-        (n{_}_vote_ts_{seq}_n{_}'=QUES_VOTE) & (n{_}_stage'=p2v_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_vote) & (n{_}_send_cmd_ts'=BOT);""" for seq, nid in itertools.product(range(log_size), range(num_nodes))]) + f"""
+    [n{_}_process_state_assign_vote_{seq}_using_n{nid}] n{_}_stage_{seq}=p2s_stage & n{_}_send_ready=false & ({quorum_valid_state(_, range(num_nodes), seq, quorum_size)}) & !({valid_quorum_state_same_as(_, nid, range(num_nodes), seq, quorum_size)}) -> \
+        (n{_}_vote_ts_{seq}_n{_}'=QUES_VOTE) & (n{_}_stage_{seq}'=p2v_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_vote) & (n{_}_send_cmd_ts'=BOT);""" for seq, nid in itertools.product(range(log_size), range(num_nodes))]) + f"""
 
-    // Process when a Vote pkt is ready.
-    [n{_}_drop_recv_if_vote_in_p2v] n{_}_stage=p2v_stage & n{_}_recv_ready=true & n{_}_recv_type!=cmd_vote -> (n{_}_recv_ready'=false);
-    """ + ''.join([f"""
+    // Process when a Vote pkt is ready.""" + ''.join([f"""
+    // Drop a message if it is not at a correct stage (TODO: add round)
+    [n{_}_drop_recv_if_vote_in_p2v_for_seq{seq}] n{_}_stage_{seq}=p2v_stage & n{_}_recv_ready=true & n{_}_recv_type!=cmd_vote -> (n{_}_recv_ready'=false);""" for seq in range(log_size)]) + ''.join([f"""
     // Try to receive the vote from node {nid} for seq {seq}.
-    [n{_}_process_vote_from_n{nid}_for_seq{seq}] n{_}_stage=p2v_stage & n{_}_recv_ready=true & n{_}_recv_from={nid} & n{_}_recv_type=cmd_vote & n{_}_recv_seq={seq} -> \
+    [n{_}_process_vote_from_n{nid}_for_seq{seq}] n{_}_stage_{seq}=p2v_stage & n{_}_recv_ready=true & n{_}_recv_from={nid} & n{_}_recv_type=cmd_vote & n{_}_recv_seq={seq} -> \
         (n{_}_recv_ready'=false) & (n{_}_vote_ts_{seq}_n{nid}'=n{_}_recv_cmd_ts);
     // Try to use the vote from node {nid} for seq {seq} when we have enough same votes, and return.
-    [n{_}_process_vote_for_seq{seq}_using_n{nid}] n{_}_stage=p2v_stage & n{_}_send_ready=false & (n{_}_vote_ts_{seq}_n{nid}!=INVALID&n{_}_vote_ts_{seq}_n{nid}!=QUES_VOTE) & ({quorum_valid_vote(_, range(num_nodes), seq, quorum_size)}) &  ({valid_quorum_vote_same_as(_, nid, range(num_nodes), seq, quorum_size)}) -> \
-        (n{_}_log_ts_{seq}'=n{_}_vote_ts_{seq}_n{nid}) & (n{_}_stage'=p1_stage) & {reset_state_and_vote(_, range(num_nodes), seq=seq, except_nid=_)};
+    [n{_}_process_vote_for_seq{seq}_using_n{nid}] n{_}_stage_{seq}=p2v_stage & n{_}_seq=LOG_SIZE-1 n{_}_send_ready=false & (n{_}_vote_ts_{seq}_n{nid}!=INVALID&n{_}_vote_ts_{seq}_n{nid}!=QUES_VOTE) & ({quorum_valid_vote(_, range(num_nodes), seq, quorum_size)}) &  ({valid_quorum_vote_same_as(_, nid, range(num_nodes), seq, quorum_size)}) -> \
+        (n{_}_log_ts_{seq}'=n{_}_vote_ts_{seq}_n{nid}) & (n{_}_stage_{seq}'=decided) & {reset_state_and_vote(_, range(num_nodes), seq=seq, except_nid=_)};
     // We don't have enough same votes, but we have the vote from {nid} that is not QUES_VOTE.
-    [n{_}_process_vote_for_seq{seq}_using_n{nid}] n{_}_stage=p2v_stage & n{_}_send_ready=false & (n{_}_vote_ts_{seq}_n{nid}!=INVALID&n{_}_vote_ts_{seq}_n{nid}!=QUES_VOTE) & ({quorum_valid_vote(_, range(num_nodes), seq, quorum_size)}) & !({valid_quorum_vote_same_as(_, nid, range(num_nodes), seq, quorum_size)}) -> \
-        (n{_}_state_ts_{seq}_n{_}'=n{_}_vote_ts_{seq}_n{nid}) & (n{_}_vote_ts_{seq}_n{_}'=INVALID) & (n{_}_stage'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=n{_}_state_ts_{seq}_n{nid}) & {reset_state_and_vote(_, range(num_nodes), seq=seq, except_nid=_)};
+    [n{_}_process_vote_for_seq{seq}_using_n{nid}] n{_}_stage_{seq}=p2v_stage & n{_}_send_ready=false & (n{_}_vote_ts_{seq}_n{nid}!=INVALID&n{_}_vote_ts_{seq}_n{nid}!=QUES_VOTE) & ({quorum_valid_vote(_, range(num_nodes), seq, quorum_size)}) & !({valid_quorum_vote_same_as(_, nid, range(num_nodes), seq, quorum_size)}) -> \
+        (n{_}_state_ts_{seq}_n{_}'=n{_}_vote_ts_{seq}_n{nid})  & (n{_}_vote_ts_{seq}_n{_}'=INVALID) & (n{_}_stage_{seq}'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=n{_}_state_ts_{seq}_n{nid}) & {reset_state_and_vote(_, range(num_nodes), seq=seq, except_nid=_)};
     // We only got QUES_VOTE, let god decides.
-    [n{_}_process_vote_for_seq{seq}_using_n{nid}] n{_}_stage=p2v_stage & n{_}_send_ready=false & ({quorum_valid_vote(_, range(num_nodes), seq, quorum_size)}) & {all_valid_vote_are_question(_, range(num_nodes), seq)} -> \
-        (n{_}_state_ts_{seq}_n{_}'=BOT)                        & (n{_}_vote_ts_{seq}_n{_}'=INVALID) & (n{_}_stage'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=BOT)                        & {reset_state_and_vote(_, range(num_nodes), seq=seq, except_nid=_)};
-    [n{_}_process_vote_for_seq{seq}_using_n{nid}] n{_}_stage=p2v_stage & n{_}_send_ready=false & ({quorum_valid_vote(_, range(num_nodes), seq, quorum_size)}) & {all_valid_vote_are_question(_, range(num_nodes), seq)} -> \
-        (n{_}_state_ts_{seq}_n{_}'=n{_}_state_ts_{seq}_n{nid}) & (n{_}_vote_ts_{seq}_n{_}'=INVALID) & (n{_}_stage'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=n{_}_state_ts_{seq}_n{nid}) & {reset_state_and_vote(_, range(num_nodes), seq=seq, except_nid=_)};""" for seq, nid in itertools.product(range(log_size), range(num_nodes))]) + """
+    [n{_}_process_vote_for_seq{seq}_using_n{nid}] n{_}_stage_{seq}=p2v_stage & n{_}_send_ready=false & ({quorum_valid_vote(_, range(num_nodes), seq, quorum_size)}) & {all_valid_vote_are_question(_, range(num_nodes), seq)} -> \
+        (n{_}_state_ts_{seq}_n{_}'=BOT)                        & (n{_}_vote_ts_{seq}_n{_}'=INVALID) & (n{_}_stage_{seq}'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=BOT)                        & {reset_state_and_vote(_, range(num_nodes), seq=seq, except_nid=_)};
+    [n{_}_process_vote_for_seq{seq}_using_n{nid}] n{_}_stage_{seq}=p2v_stage & n{_}_send_ready=false & ({quorum_valid_vote(_, range(num_nodes), seq, quorum_size)}) & {all_valid_vote_are_question(_, range(num_nodes), seq)} -> \
+        (n{_}_state_ts_{seq}_n{_}'=n{_}_state_ts_{seq}_n{nid}) & (n{_}_vote_ts_{seq}_n{_}'=INVALID) & (n{_}_stage_{seq}'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=n{_}_state_ts_{seq}_n{nid}) & {reset_state_and_vote(_, range(num_nodes), seq=seq, except_nid=_)};""" for seq, nid in itertools.product(range(log_size), range(num_nodes))]) + """
+    
+    
 
     // Send when a pkt is ready; Recv when a pkt is ready.""" + ''.join([f"""
     [recv_{j}{_}_{bid}] n{_}_recv_ready=false -> \
