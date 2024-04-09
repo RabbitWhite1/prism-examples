@@ -1,3 +1,5 @@
 // Pmax=?[F (term_1=3) & (global_time<=80)]
 // Pmin=?[F (term_1=3) & (global_time<=80)]
-P=?[F (voted_1_0=true) & (voted_1_1=true)]
+P=?[F (voted_1_0=true) | (voted_1_1=true)]
+P=?[F (elected_1=true)]
+P=?[F (elected_2=true)]
