@@ -40,9 +40,9 @@ module node0
     n0_seq : [0..LOG_SIZE] init 0;
     /// p1 stage
     n0_pq_valid_0 : bool init true;
-    n0_pq_ts_0 : [0..MAX_TS] init 1;
+    n0_pq_ts_0 : [MIN_TS_VALUE..MAX_TS] init 1;
     n0_pq_valid_1 : bool init false;
-    n0_pq_ts_1 : [0..MAX_TS] init 0;
+    n0_pq_ts_1 : [MIN_TS_VALUE..MAX_TS] init 0;
     n0_stage_seq0 : [0..NUM_STATES] init p0_bc_cmd_stage;
     n0_log_ts_seq0 : [MIN_TS_VALUE..MAX_TS] init INVALID; 
     n0_stage_seq1 : [0..NUM_STATES] init p0_bc_cmd_stage;
@@ -521,11 +521,13 @@ module node0
     [n0_pre_decided_stage_seq1_using_q1] n0_stage_seq1=pre_decided_stage & n0_log_ts_seq1=OUT_OF_ROUND & n0_pq_valid_1=false & n0_seq+1=LOG_SIZE -> (n0_stage_seq1'=decided) & (n0_pq_valid_1'=true) & (n0_pq_ts_1'=n0_proposal_seq1_r0_n0);
                                                                                                                                                                                                                                                                            
     // Receive and process_decided
-    [n0_receive_and_process_decided_for_seq0] n0_recv_ready=true & n0_recv_type=cmd_decided & n0_recv_seq=0 & n0_stage_seq0!=decided -> (n0_recv_ready'=false) & (n0_log_ts_seq0'=n0_recv_cmd_ts) & (n0_stage_seq0'=decided) & (n0_seq'=n0_seq+1);
+    [n0_receive_and_process_decided_for_seq0] n0_recv_ready=true & n0_recv_type=cmd_decided & n0_recv_seq=0 & n0_stage_seq0!=decided & n0_seq+1<LOG_SIZE -> (n0_recv_ready'=false) & (n0_log_ts_seq0'=n0_recv_cmd_ts) & (n0_stage_seq0'=decided) & (n0_seq'=n0_seq+1);
+    [n0_receive_and_process_decided_for_seq0] n0_recv_ready=true & n0_recv_type=cmd_decided & n0_recv_seq=0 & n0_stage_seq0!=decided & n0_seq+1=LOG_SIZE -> (n0_recv_ready'=false) & (n0_log_ts_seq0'=n0_recv_cmd_ts) & (n0_stage_seq0'=decided);
     [n0_receive_and_process_decided_for_seq0] n0_recv_ready=true & n0_recv_type=cmd_decided & n0_recv_seq=0 & n0_stage_seq0=decided  -> (n0_recv_ready'=false);
                                                                                                                                                                                                                                                                            
     // Receive and process_decided
-    [n0_receive_and_process_decided_for_seq1] n0_recv_ready=true & n0_recv_type=cmd_decided & n0_recv_seq=1 & n0_stage_seq1!=decided -> (n0_recv_ready'=false) & (n0_log_ts_seq1'=n0_recv_cmd_ts) & (n0_stage_seq1'=decided) & (n0_seq'=n0_seq+1);
+    [n0_receive_and_process_decided_for_seq1] n0_recv_ready=true & n0_recv_type=cmd_decided & n0_recv_seq=1 & n0_stage_seq1!=decided & n0_seq+1<LOG_SIZE -> (n0_recv_ready'=false) & (n0_log_ts_seq1'=n0_recv_cmd_ts) & (n0_stage_seq1'=decided) & (n0_seq'=n0_seq+1);
+    [n0_receive_and_process_decided_for_seq1] n0_recv_ready=true & n0_recv_type=cmd_decided & n0_recv_seq=1 & n0_stage_seq1!=decided & n0_seq+1=LOG_SIZE -> (n0_recv_ready'=false) & (n0_log_ts_seq1'=n0_recv_cmd_ts) & (n0_stage_seq1'=decided);
     [n0_receive_and_process_decided_for_seq1] n0_recv_ready=true & n0_recv_type=cmd_decided & n0_recv_seq=1 & n0_stage_seq1=decided  -> (n0_recv_ready'=false);
 
     // Send when a pkt is ready; Recv when a pkt is ready.
@@ -547,9 +549,9 @@ module node1
     n1_seq : [0..LOG_SIZE] init 0;
     /// p1 stage
     n1_pq_valid_0 : bool init true;
-    n1_pq_ts_0 : [0..MAX_TS] init 1;
+    n1_pq_ts_0 : [MIN_TS_VALUE..MAX_TS] init 1;
     n1_pq_valid_1 : bool init false;
-    n1_pq_ts_1 : [0..MAX_TS] init 0;
+    n1_pq_ts_1 : [MIN_TS_VALUE..MAX_TS] init 0;
     n1_stage_seq0 : [0..NUM_STATES] init p0_bc_cmd_stage;
     n1_log_ts_seq0 : [MIN_TS_VALUE..MAX_TS] init INVALID; 
     n1_stage_seq1 : [0..NUM_STATES] init p0_bc_cmd_stage;
@@ -1028,11 +1030,13 @@ module node1
     [n1_pre_decided_stage_seq1_using_q1] n1_stage_seq1=pre_decided_stage & n1_log_ts_seq1=OUT_OF_ROUND & n1_pq_valid_1=false & n1_seq+1=LOG_SIZE -> (n1_stage_seq1'=decided) & (n1_pq_valid_1'=true) & (n1_pq_ts_1'=n1_proposal_seq1_r0_n1);
                                                                                                                                                                                                                                                                            
     // Receive and process_decided
-    [n1_receive_and_process_decided_for_seq0] n1_recv_ready=true & n1_recv_type=cmd_decided & n1_recv_seq=0 & n1_stage_seq0!=decided -> (n1_recv_ready'=false) & (n1_log_ts_seq0'=n1_recv_cmd_ts) & (n1_stage_seq0'=decided) & (n1_seq'=n1_seq+1);
+    [n1_receive_and_process_decided_for_seq0] n1_recv_ready=true & n1_recv_type=cmd_decided & n1_recv_seq=0 & n1_stage_seq0!=decided & n1_seq+1<LOG_SIZE -> (n1_recv_ready'=false) & (n1_log_ts_seq0'=n1_recv_cmd_ts) & (n1_stage_seq0'=decided) & (n1_seq'=n1_seq+1);
+    [n1_receive_and_process_decided_for_seq0] n1_recv_ready=true & n1_recv_type=cmd_decided & n1_recv_seq=0 & n1_stage_seq0!=decided & n1_seq+1=LOG_SIZE -> (n1_recv_ready'=false) & (n1_log_ts_seq0'=n1_recv_cmd_ts) & (n1_stage_seq0'=decided);
     [n1_receive_and_process_decided_for_seq0] n1_recv_ready=true & n1_recv_type=cmd_decided & n1_recv_seq=0 & n1_stage_seq0=decided  -> (n1_recv_ready'=false);
                                                                                                                                                                                                                                                                            
     // Receive and process_decided
-    [n1_receive_and_process_decided_for_seq1] n1_recv_ready=true & n1_recv_type=cmd_decided & n1_recv_seq=1 & n1_stage_seq1!=decided -> (n1_recv_ready'=false) & (n1_log_ts_seq1'=n1_recv_cmd_ts) & (n1_stage_seq1'=decided) & (n1_seq'=n1_seq+1);
+    [n1_receive_and_process_decided_for_seq1] n1_recv_ready=true & n1_recv_type=cmd_decided & n1_recv_seq=1 & n1_stage_seq1!=decided & n1_seq+1<LOG_SIZE -> (n1_recv_ready'=false) & (n1_log_ts_seq1'=n1_recv_cmd_ts) & (n1_stage_seq1'=decided) & (n1_seq'=n1_seq+1);
+    [n1_receive_and_process_decided_for_seq1] n1_recv_ready=true & n1_recv_type=cmd_decided & n1_recv_seq=1 & n1_stage_seq1!=decided & n1_seq+1=LOG_SIZE -> (n1_recv_ready'=false) & (n1_log_ts_seq1'=n1_recv_cmd_ts) & (n1_stage_seq1'=decided);
     [n1_receive_and_process_decided_for_seq1] n1_recv_ready=true & n1_recv_type=cmd_decided & n1_recv_seq=1 & n1_stage_seq1=decided  -> (n1_recv_ready'=false);
 
     // Send when a pkt is ready; Recv when a pkt is ready.
@@ -1054,9 +1058,9 @@ module node2
     n2_seq : [0..LOG_SIZE] init 0;
     /// p1 stage
     n2_pq_valid_0 : bool init true;
-    n2_pq_ts_0 : [0..MAX_TS] init 1;
+    n2_pq_ts_0 : [MIN_TS_VALUE..MAX_TS] init 1;
     n2_pq_valid_1 : bool init false;
-    n2_pq_ts_1 : [0..MAX_TS] init 0;
+    n2_pq_ts_1 : [MIN_TS_VALUE..MAX_TS] init 0;
     n2_stage_seq0 : [0..NUM_STATES] init p0_bc_cmd_stage;
     n2_log_ts_seq0 : [MIN_TS_VALUE..MAX_TS] init INVALID; 
     n2_stage_seq1 : [0..NUM_STATES] init p0_bc_cmd_stage;
@@ -1535,11 +1539,13 @@ module node2
     [n2_pre_decided_stage_seq1_using_q1] n2_stage_seq1=pre_decided_stage & n2_log_ts_seq1=OUT_OF_ROUND & n2_pq_valid_1=false & n2_seq+1=LOG_SIZE -> (n2_stage_seq1'=decided) & (n2_pq_valid_1'=true) & (n2_pq_ts_1'=n2_proposal_seq1_r0_n2);
                                                                                                                                                                                                                                                                            
     // Receive and process_decided
-    [n2_receive_and_process_decided_for_seq0] n2_recv_ready=true & n2_recv_type=cmd_decided & n2_recv_seq=0 & n2_stage_seq0!=decided -> (n2_recv_ready'=false) & (n2_log_ts_seq0'=n2_recv_cmd_ts) & (n2_stage_seq0'=decided) & (n2_seq'=n2_seq+1);
+    [n2_receive_and_process_decided_for_seq0] n2_recv_ready=true & n2_recv_type=cmd_decided & n2_recv_seq=0 & n2_stage_seq0!=decided & n2_seq+1<LOG_SIZE -> (n2_recv_ready'=false) & (n2_log_ts_seq0'=n2_recv_cmd_ts) & (n2_stage_seq0'=decided) & (n2_seq'=n2_seq+1);
+    [n2_receive_and_process_decided_for_seq0] n2_recv_ready=true & n2_recv_type=cmd_decided & n2_recv_seq=0 & n2_stage_seq0!=decided & n2_seq+1=LOG_SIZE -> (n2_recv_ready'=false) & (n2_log_ts_seq0'=n2_recv_cmd_ts) & (n2_stage_seq0'=decided);
     [n2_receive_and_process_decided_for_seq0] n2_recv_ready=true & n2_recv_type=cmd_decided & n2_recv_seq=0 & n2_stage_seq0=decided  -> (n2_recv_ready'=false);
                                                                                                                                                                                                                                                                            
     // Receive and process_decided
-    [n2_receive_and_process_decided_for_seq1] n2_recv_ready=true & n2_recv_type=cmd_decided & n2_recv_seq=1 & n2_stage_seq1!=decided -> (n2_recv_ready'=false) & (n2_log_ts_seq1'=n2_recv_cmd_ts) & (n2_stage_seq1'=decided) & (n2_seq'=n2_seq+1);
+    [n2_receive_and_process_decided_for_seq1] n2_recv_ready=true & n2_recv_type=cmd_decided & n2_recv_seq=1 & n2_stage_seq1!=decided & n2_seq+1<LOG_SIZE -> (n2_recv_ready'=false) & (n2_log_ts_seq1'=n2_recv_cmd_ts) & (n2_stage_seq1'=decided) & (n2_seq'=n2_seq+1);
+    [n2_receive_and_process_decided_for_seq1] n2_recv_ready=true & n2_recv_type=cmd_decided & n2_recv_seq=1 & n2_stage_seq1!=decided & n2_seq+1=LOG_SIZE -> (n2_recv_ready'=false) & (n2_log_ts_seq1'=n2_recv_cmd_ts) & (n2_stage_seq1'=decided);
     [n2_receive_and_process_decided_for_seq1] n2_recv_ready=true & n2_recv_type=cmd_decided & n2_recv_seq=1 & n2_stage_seq1=decided  -> (n2_recv_ready'=false);
 
     // Send when a pkt is ready; Recv when a pkt is ready.

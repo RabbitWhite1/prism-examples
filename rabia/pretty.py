@@ -82,7 +82,7 @@ module node{_}
     n{_}_seq : [0..LOG_SIZE] init 0;
     /// p1 stage""" + ''.join([f"""
     n{_}_pq_valid_{qid} : bool init {"true" if qid == 0 else "false"};
-    n{_}_pq_ts_{qid} : [0..MAX_TS] init {(1 if _ < 2 else 1) if qid == 0 else 0};""" for qid in range(queue_size)]) + ''.join([f"""
+    n{_}_pq_ts_{qid} : [MIN_TS_VALUE..MAX_TS] init {(1 if _ < 2 else 1) if qid == 0 else 0};""" for qid in range(queue_size)]) + ''.join([f"""
     n{_}_stage_seq{seq} : [0..NUM_STATES] init p0_bc_cmd_stage;
     n{_}_log_ts_seq{seq} : [MIN_TS_VALUE..MAX_TS] init INVALID; """ for seq in range(log_size)]) + """
     /// p2 stage""" + ''.join([f"""
@@ -181,7 +181,8 @@ module node{_}
     [n{_}_pre_decided_stage_seq{seq}_using_q{qid}] n{_}_stage_seq{seq}=pre_decided_stage & n{_}_log_ts_seq{seq}=OUT_OF_ROUND & n{_}_pq_valid_{qid}=false & n{_}_seq+1=LOG_SIZE -> (n{_}_stage_seq{seq}'=decided) & (n{_}_pq_valid_{qid}'=true) & (n{_}_pq_ts_{qid}'=n{_}_proposal_seq{seq}_r0_n{_});""" for seq, qid in itertools.product(range(log_size), range(queue_size))]) + ''.join([f"""
                                                                                                                                                                                                                                                                            
     // Receive and process_decided
-    [n{_}_receive_and_process_decided_for_seq{seq}] n{_}_recv_ready=true & n{_}_recv_type=cmd_decided & n{_}_recv_seq={seq} & n{_}_stage_seq{seq}!=decided -> (n{_}_recv_ready'=false) & (n{_}_log_ts_seq{seq}'=n{_}_recv_cmd_ts) & (n{_}_stage_seq{seq}'=decided) & (n{_}_seq'=n{_}_seq+1);
+    [n{_}_receive_and_process_decided_for_seq{seq}] n{_}_recv_ready=true & n{_}_recv_type=cmd_decided & n{_}_recv_seq={seq} & n{_}_stage_seq{seq}!=decided & n{_}_seq+1<LOG_SIZE -> (n{_}_recv_ready'=false) & (n{_}_log_ts_seq{seq}'=n{_}_recv_cmd_ts) & (n{_}_stage_seq{seq}'=decided) & (n{_}_seq'=n{_}_seq+1);
+    [n{_}_receive_and_process_decided_for_seq{seq}] n{_}_recv_ready=true & n{_}_recv_type=cmd_decided & n{_}_recv_seq={seq} & n{_}_stage_seq{seq}!=decided & n{_}_seq+1=LOG_SIZE -> (n{_}_recv_ready'=false) & (n{_}_log_ts_seq{seq}'=n{_}_recv_cmd_ts) & (n{_}_stage_seq{seq}'=decided);
     [n{_}_receive_and_process_decided_for_seq{seq}] n{_}_recv_ready=true & n{_}_recv_type=cmd_decided & n{_}_recv_seq={seq} & n{_}_stage_seq{seq}=decided  -> (n{_}_recv_ready'=false);""" for seq in range(log_size)]) + """
 
     // Send when a pkt is ready; Recv when a pkt is ready.""" + ''.join([f"""
