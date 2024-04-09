@@ -1,13 +1,12 @@
 # TODO: 
-# 1. debug deadlock
-# 2. process cmd decided
+# 1. don't broadcast decided
 import itertools
     
 
-buf_size = 3
-num_nodes = 2
+buf_size = 2
+num_nodes = 3
 quorum_size = num_nodes//2+1
-log_size = 1
+log_size = 2
 queue_size = 2
 max_round = 2
 
@@ -70,9 +69,10 @@ const NUM_CMD_TYPES = 5;
 const INVALID=-1;
 const BOT = -2;
 const QUES_VOTE = -3;
+const OUT_OF_ROUND = -4;
 
-const MIN_VOTE_VALUE=-3;
-const MIN_TS_VALUE=-3;
+const MIN_VOTE_VALUE=-4;
+const MIN_TS_VALUE=-4;
 
 """
 
@@ -82,7 +82,7 @@ module node{_}
     n{_}_seq : [0..LOG_SIZE] init 0;
     /// p1 stage""" + ''.join([f"""
     n{_}_pq_valid_{qid} : bool init {"true" if qid == 0 else "false"};
-    n{_}_pq_ts_{qid} : [0..MAX_TS] init {(1 if _ < 2 else 2) if qid == 0 else 0};""" for qid in range(queue_size)]) + ''.join([f"""
+    n{_}_pq_ts_{qid} : [0..MAX_TS] init {(1 if _ < 2 else 1) if qid == 0 else 0};""" for qid in range(queue_size)]) + ''.join([f"""
     n{_}_stage_seq{seq} : [0..NUM_STATES] init p0_bc_cmd_stage;
     n{_}_log_ts_seq{seq} : [MIN_TS_VALUE..MAX_TS] init INVALID; """ for seq in range(log_size)]) + """
     /// p2 stage""" + ''.join([f"""
@@ -109,80 +109,86 @@ module node{_}
     
     // Try on each queue slot and execute if the slot has min ts""" + ''.join([f"""
     [n{_}_propose_next_command_for_seq{seq}_using_q{qid}] n{_}_stage_seq{seq}=p0_bc_cmd_stage & n{_}_send_ready=false & n{_}_seq={seq} & n{_}_pq_valid_{qid}=true & {'&'.join([f"(!n{_}_pq_valid_{j}|n{_}_pq_ts_{j}>=n{_}_pq_ts_{qid})" for j in range(queue_size)])} -> \
-        (n{_}_stage_seq{seq}'=p1_stage) & (n{_}_round_{seq}'=0) & (n{_}_proposal_seq{seq}_r0_n{_}'=n{_}_pq_ts_{qid}) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_proposal) & (n{_}_send_cmd_ts'=n{_}_pq_ts_{qid});""" for qid, seq in itertools.product(range(queue_size), range(log_size))]) + f"""
+        (n{_}_stage_seq{seq}'=p1_stage) & (n{_}_round_{seq}'=0) & (n{_}_proposal_seq{seq}_r0_n{_}'=n{_}_pq_ts_{qid}) & (n{_}_pq_valid_{qid}'=false) & (n{_}_pq_ts_{qid}'=0) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_proposal) & (n{_}_send_seq'={seq}) & (n{_}_send_round'=0) & (n{_}_send_cmd_ts'=n{_}_pq_ts_{qid});""" for qid, seq in itertools.product(range(queue_size), range(log_size))]) + f"""
     
     // Process when a Proposal pkt is ready.""" + ''.join([f"""
     // Received an old proposal for seq{seq}, reply decided.
-    [n{_}_receive_proposal_from_old_seq{seq}_reply_decided]   n{_}_recv_ready=true & n{_}_recv_type=cmd_proposal & (n{_}_stage_seq{seq}=decided) -> \
+    [n{_}_receive_proposal_from_old_seq{seq}_reply_decided]   n{_}_recv_ready=true & n{_}_recv_type=cmd_proposal & n{_}_recv_seq={seq} & (n{_}_stage_seq{seq}=decided) -> \
         (n{_}_recv_ready'=false) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_decided) & (n{_}_send_seq'={seq}) & (n{_}_send_cmd_ts'=n{_}_log_ts_seq{seq});""" for seq in range(log_size)]) + ''.join([f""" 
-    // Receive the proposal from node {nid} for non-decided seq{seq}, round{round}.
-    [n{_}_receive_proposal_from_n{nid}_for_seq{seq}_r{round}] n{_}_recv_ready=true & n{_}_recv_from={nid} & n{_}_recv_type=cmd_proposal & (n{_}_stage_seq{seq}!=decided) -> \
+    // Receive the proposal from node {nid} for non-decided seq{seq}, round{round}. (TODO: update this, proposal can actually from round0)
+    [n{_}_receive_proposal_from_n{nid}_for_seq{seq}_r{round}] n{_}_recv_ready=true & n{_}_recv_from={nid} & n{_}_recv_type=cmd_proposal & n{_}_recv_seq={seq} & n{_}_recv_round={round} & (n{_}_stage_seq{seq}!=decided) -> \
         (n{_}_recv_ready'=false) & (n{_}_proposal_seq{seq}_r{round}_n{nid}'=n{_}_recv_cmd_ts);""" for seq, round, nid in itertools.product(range(log_size), range(max_round), range(num_nodes))]) + ''.join([f""" 
 
     // 1. When we have enough proposals, assign the state using the proposal from node {nid} for seq{seq} at round{round}.
     [n{_}_process_proposal_assign_state_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p1_stage & n{_}_round_{seq}={round} & n{_}_send_ready=false & ({quorum_valid_proposal(_, range(num_nodes), seq, round, quorum_size)}) & ({valid_quorum_proposal_same_as(_, nid, range(num_nodes), seq, round, quorum_size)}) -> \
-        (n{_}_state_ts_seq{seq}_r{round}_n{_}'=n{_}_proposal_seq{seq}_r{round}_n{nid}) & (n{_}_stage_seq{seq}'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=n{_}_proposal_seq{seq}_r{round}_n{nid});
+        (n{_}_state_ts_seq{seq}_r{round}_n{_}'=n{_}_proposal_seq{seq}_r{round}_n{nid}) & (n{_}_stage_seq{seq}'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_seq'={seq}) & (n{_}_send_round'={round}) & (n{_}_send_cmd_ts'=n{_}_proposal_seq{seq}_r{round}_n{nid});
     // 2. When we have enough proposals, but no enough same state as node{nid}, we assign BOT.
     [n{_}_process_proposal_assign_state_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p1_stage & n{_}_round_{seq}={round} & n{_}_send_ready=false & ({quorum_valid_proposal(_, range(num_nodes), seq, round, quorum_size)}) & !({valid_quorum_proposal_same_as(_, nid, range(num_nodes), seq, round, quorum_size)}) -> \
-        (n{_}_state_ts_seq{seq}_r{round}_n{_}'=BOT)                                    & (n{_}_stage_seq{seq}'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=BOT);""" for seq, round, nid in itertools.product(range(log_size), range(max_round), range(num_nodes))]) + f"""
+        (n{_}_state_ts_seq{seq}_r{round}_n{_}'=BOT)                                    & (n{_}_stage_seq{seq}'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_seq'={seq}) & (n{_}_send_round'={round}) & (n{_}_send_cmd_ts'=BOT);""" for seq, round, nid in itertools.product(range(log_size), range(max_round), range(num_nodes))]) + f"""
 
         
     // Process when a State pkt is ready.""" + ''.join([f"""
     // Received an old state for seq{seq}, reply decided.
-    [n{_}_receive_state_from_old_seq{seq}_reply_decided]   n{_}_recv_ready=true & n{_}_recv_type=cmd_state & (n{_}_stage_seq{seq}=decided) -> \
+    [n{_}_receive_state_from_old_seq{seq}_reply_decided]   n{_}_recv_ready=true & n{_}_recv_type=cmd_state & (n{_}_stage_seq{seq}=decided) & n{_}_recv_seq={seq} -> \
         (n{_}_recv_ready'=false) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_decided) & (n{_}_send_seq'={seq}) & (n{_}_send_cmd_ts'=n{_}_log_ts_seq{seq});""" for seq in range(log_size)]) + ''.join([f""" 
     // Receive the proposal from node {nid} for non-decided seq{seq}, round{round}.
-    [n{_}_receive_state_from_n{nid}_for_seq{seq}_r{round}] n{_}_recv_ready=true & n{_}_recv_from={nid} & n{_}_recv_type=cmd_state & (n{_}_stage_seq{seq}!=decided) -> \
+    [n{_}_receive_state_from_n{nid}_for_seq{seq}_r{round}] n{_}_recv_ready=true & n{_}_recv_from={nid} & n{_}_recv_type=cmd_state & n{_}_recv_seq={seq} & n{_}_recv_round={round} & (n{_}_stage_seq{seq}!=decided) -> \
         (n{_}_recv_ready'=false) & (n{_}_state_ts_seq{seq}_r{round}_n{nid}'=n{_}_recv_cmd_ts);""" for seq, round, nid in itertools.product(range(log_size), range(max_round), range(num_nodes))]) + ''.join([f""" 
 
     // 1. When we have enough states, seq{seq} assign the state using the proposal from node {nid} for seq{seq} at round{round}.
     [n{_}_process_state_assign_vote_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p2s_stage & n{_}_round_{seq}={round} & n{_}_send_ready=false & ({quorum_valid_state(_, range(num_nodes), seq, round, quorum_size)}) &  ({valid_quorum_state_same_as(_, nid, range(num_nodes), seq, round, quorum_size)}) -> \
-        (n{_}_vote_ts_seq{seq}_r{round}_n{_}'=n{_}_state_ts_seq{seq}_r{round}_n{nid}) & (n{_}_stage_seq{seq}'=p2v_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_vote) & (n{_}_send_cmd_ts'=n{_}_state_ts_seq{seq}_r{round}_n{nid});
+        (n{_}_vote_ts_seq{seq}_r{round}_n{_}'=n{_}_state_ts_seq{seq}_r{round}_n{nid}) & (n{_}_stage_seq{seq}'=p2v_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_vote) & (n{_}_send_seq'={seq}) & (n{_}_send_round'={round}) & (n{_}_send_cmd_ts'=n{_}_state_ts_seq{seq}_r{round}_n{nid});
     // 2. When we have enough proposals, but no enough same state as node{nid}, we assign QUES_VOTE.
     [n{_}_process_state_assign_vote_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p2s_stage & n{_}_round_{seq}={round} & n{_}_send_ready=false & ({quorum_valid_state(_, range(num_nodes), seq, round, quorum_size)}) & !({valid_quorum_state_same_as(_, nid, range(num_nodes), seq, round, quorum_size)}) -> \
-        (n{_}_vote_ts_seq{seq}_r{round}_n{_}'=QUES_VOTE)                              & (n{_}_stage_seq{seq}'=p2v_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_vote) & (n{_}_send_cmd_ts'=BOT);""" for seq, round, nid in itertools.product(range(log_size), range(max_round), range(num_nodes))]) + f"""
+        (n{_}_vote_ts_seq{seq}_r{round}_n{_}'=QUES_VOTE)                              & (n{_}_stage_seq{seq}'=p2v_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_vote) & (n{_}_send_seq'={seq}) & (n{_}_send_round'={round}) & (n{_}_send_cmd_ts'=BOT);""" for seq, round, nid in itertools.product(range(log_size), range(max_round), range(num_nodes))]) + f"""
 
     // Process when a Vote pkt is ready.""" + ''.join([f"""
     // Received an old state for seq{seq}, reply decided.
-    [n{_}_receive_vote_from_old_seq{seq}_reply_decided]   n{_}_recv_ready=true & n{_}_recv_type=cmd_vote & (n{_}_stage_seq{seq}=decided) -> \
+    [n{_}_receive_vote_from_old_seq{seq}_reply_decided]   n{_}_recv_ready=true & n{_}_recv_type=cmd_vote & n{_}_recv_seq={seq} & (n{_}_stage_seq{seq}=decided) -> \
         (n{_}_recv_ready'=false) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_decided) & (n{_}_send_seq'={seq}) & (n{_}_send_cmd_ts'=n{_}_log_ts_seq{seq});""" for seq in range(log_size)]) + ''.join([f""" 
     // Receive the vote from node {nid} for non-decided seq{seq}, round{round}.
-    [n{_}_process_vote_from_n{nid}_for_seq{seq}_r{round}] n{_}_recv_ready=true & n{_}_recv_from={nid} & n{_}_recv_type=cmd_vote & (n{_}_stage_seq{seq}!=decided) -> \
+    [n{_}_receive_vote_from_n{nid}_for_seq{seq}_r{round}] n{_}_recv_ready=true & n{_}_recv_from={nid} & n{_}_recv_type=cmd_vote & n{_}_recv_seq={seq} & n{_}_recv_round={round} & n{_}_stage_seq{seq}!=decided -> \
         (n{_}_recv_ready'=false) & (n{_}_vote_ts_seq{seq}_r{round}_n{nid}'=n{_}_recv_cmd_ts);""" for seq, round, nid in itertools.product(range(log_size), range(max_round), range(num_nodes))]) + ''.join([f""" 
         
     // 1. When we have enough same non-question votes, assign the log using the proposal from node {nid} for seq{seq} at round{round}.
-    [n{_}_process_vote_for_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_seq=LOG_SIZE-1 & n{_}_send_ready=false & (n{_}_vote_ts_seq{seq}_r{round}_n{nid}!=INVALID&n{_}_vote_ts_seq{seq}_r{round}_n{nid}!=QUES_VOTE) & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & ({valid_quorum_vote_same_as(_, nid, range(num_nodes), seq, round, quorum_size)}) -> \
+    [n{_}_process_vote_for_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}={round} & (n{_}_vote_ts_seq{seq}_r{round}_n{nid}!=INVALID&n{_}_vote_ts_seq{seq}_r{round}_n{nid}!=QUES_VOTE) & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & ({valid_quorum_vote_same_as(_, nid, range(num_nodes), seq, round, quorum_size)}) -> \
         (n{_}_log_ts_seq{seq}'=n{_}_vote_ts_seq{seq}_r{round}_n{nid}) & (n{_}_stage_seq{seq}'=pre_decided_stage);""" for seq, round, nid in itertools.product(range(log_size), range(max_round), range(num_nodes))]) + ''.join([f"""
                                                                                                                                                                                                                           
     // 2. When we have enough non-question votes, but not a quorum, then we assign any non-question vote using the proposal from node {nid} for seq{seq} at round{round}.
-    [n{_}_process_vote_for_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}+1<MAX_ROUND & (n{_}_vote_ts_seq{seq}_r{round}_n{nid}!=INVALID&n{_}_vote_ts_seq{seq}_r{round}_n{nid}!=QUES_VOTE) & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & !({valid_quorum_vote_same_as(_, nid, range(num_nodes), seq, round, quorum_size)}) -> \
-        (n{_}_state_ts_seq{seq}_r{round}_n{_}'=n{_}_vote_ts_seq{seq}_r{round}_n{nid})  & (n{_}_vote_ts_seq{seq}_r{round}_n{_}'=INVALID) & (n{_}_stage_seq{seq}'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=n{_}_state_ts_seq{seq}_r{round}_n{nid}) & (n{_}_round_{seq}'=n{_}_round_{seq}+1);
-    [n{_}_process_vote_for_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}+1=MAX_ROUND & (n{_}_vote_ts_seq{seq}_r{round}_n{nid}!=INVALID&n{_}_vote_ts_seq{seq}_r{round}_n{nid}!=QUES_VOTE) & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & !({valid_quorum_vote_same_as(_, nid, range(num_nodes), seq, round, quorum_size)}) -> \
-        (n{_}_log_ts_seq{seq}'=QUES_VOTE) & (n{_}_stage_seq{seq}'=pre_decided_stage);
+    [n{_}_process_vote_for_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}={round} & n{_}_round_{seq}+1<MAX_ROUND & (n{_}_vote_ts_seq{seq}_r{round}_n{nid}!=INVALID&n{_}_vote_ts_seq{seq}_r{round}_n{nid}!=QUES_VOTE) & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & !({valid_quorum_vote_same_as(_, nid, range(num_nodes), seq, round, quorum_size)}) -> \
+        (n{_}_state_ts_seq{seq}_r{round}_n{_}'=n{_}_vote_ts_seq{seq}_r{round}_n{nid}) & (n{_}_vote_ts_seq{seq}_r{round}_n{_}'=INVALID) & (n{_}_stage_seq{seq}'=p2s_stage) & (n{_}_round_{seq}'=n{_}_round_{seq}+1) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_seq'={seq}) & (n{_}_send_round'={round}+1) & (n{_}_send_cmd_ts'=n{_}_state_ts_seq{seq}_r{round}_n{nid});
+    //// 2.fail: Out of rounds
+    [n{_}_process_vote_for_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}={round} & n{_}_round_{seq}+1=MAX_ROUND & (n{_}_vote_ts_seq{seq}_r{round}_n{nid}!=INVALID&n{_}_vote_ts_seq{seq}_r{round}_n{nid}!=QUES_VOTE) & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & !({valid_quorum_vote_same_as(_, nid, range(num_nodes), seq, round, quorum_size)}) -> \
+        (n{_}_log_ts_seq{seq}'=OUT_OF_ROUND) & (n{_}_stage_seq{seq}'=pre_decided_stage);
 
     // 3. We only got QUES_VOTE, let god decides.
-    [n{_}_process_vote_for_seq{seq}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}+1<MAX_ROUND & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & {all_valid_vote_are_question(_, range(num_nodes), seq, round)} -> \
-        (n{_}_state_ts_seq{seq}_r{round}_n{_}'=BOT)                                    & (n{_}_vote_ts_seq{seq}_r{round}_n{_}'=INVALID) & (n{_}_stage_seq{seq}'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=BOT)                                    & (n{_}_round_{seq}'=n{_}_round_{seq}+1);
-    [n{_}_process_vote_for_seq{seq}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}+1<MAX_ROUND & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & {all_valid_vote_are_question(_, range(num_nodes), seq, round)} -> \
-        (n{_}_state_ts_seq{seq}_r{round}_n{_}'=n{_}_state_ts_seq{seq}_r{round}_n{nid}) & (n{_}_vote_ts_seq{seq}_r{round}_n{_}'=INVALID) & (n{_}_stage_seq{seq}'=p2s_stage) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_cmd_ts'=n{_}_state_ts_seq{seq}_r{round}_n{nid}) & (n{_}_round_{seq}'=n{_}_round_{seq}+1);
-    [n{_}_process_vote_for_seq{seq}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}+1=MAX_ROUND & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & {all_valid_vote_are_question(_, range(num_nodes), seq, round)} -> \
-        (n{_}_log_ts_seq{seq}'=QUES_VOTE) & (n{_}_stage_seq{seq}'=pre_decided_stage);
-    [n{_}_process_vote_for_seq{seq}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}+1=MAX_ROUND & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & {all_valid_vote_are_question(_, range(num_nodes), seq, round)} -> \
-        (n{_}_log_ts_seq{seq}'=QUES_VOTE) & (n{_}_stage_seq{seq}'=pre_decided_stage);""" for seq, round, nid in itertools.product(range(log_size), range(max_round), range(num_nodes))]) + """
+    [n{_}_process_vote_for_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}={round} & n{_}_round_{seq}+1<MAX_ROUND & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & {all_valid_vote_are_question(_, range(num_nodes), seq, round)} -> \
+        (n{_}_state_ts_seq{seq}_r{round}_n{_}'=BOT)                                    & (n{_}_vote_ts_seq{seq}_r{round}_n{_}'=INVALID) & (n{_}_stage_seq{seq}'=p2s_stage) & (n{_}_round_{seq}'=n{_}_round_{seq}+1) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_seq'={seq}) & (n{_}_send_round'={round}+1) & (n{_}_send_cmd_ts'=BOT);
+    [n{_}_process_vote_for_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}={round} & n{_}_round_{seq}+1<MAX_ROUND & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & {all_valid_vote_are_question(_, range(num_nodes), seq, round)} -> \
+        (n{_}_state_ts_seq{seq}_r{round}_n{_}'=n{_}_state_ts_seq{seq}_r{round}_n{nid}) & (n{_}_vote_ts_seq{seq}_r{round}_n{_}'=INVALID) & (n{_}_stage_seq{seq}'=p2s_stage) & (n{_}_round_{seq}'=n{_}_round_{seq}+1) & (n{_}_send_ready'=true) & (n{_}_send_is_broadcast'=true) & (n{_}_send_type'=cmd_state) & (n{_}_send_seq'={seq}) & (n{_}_send_round'={round}+1) & (n{_}_send_cmd_ts'=n{_}_state_ts_seq{seq}_r{round}_n{nid});
+    //// 3.fail: Out of rounds
+    [n{_}_process_vote_for_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}={round} & n{_}_round_{seq}+1=MAX_ROUND & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & {all_valid_vote_are_question(_, range(num_nodes), seq, round)} -> \
+        (n{_}_log_ts_seq{seq}'=OUT_OF_ROUND) & (n{_}_stage_seq{seq}'=pre_decided_stage);
+    [n{_}_process_vote_for_seq{seq}_r{round}_using_n{nid}] n{_}_stage_seq{seq}=p2v_stage & n{_}_send_ready=false & n{_}_round_{seq}={round} & n{_}_round_{seq}+1=MAX_ROUND & ({quorum_valid_vote(_, range(num_nodes), seq, round, quorum_size)}) & {all_valid_vote_are_question(_, range(num_nodes), seq, round)} -> \
+        (n{_}_log_ts_seq{seq}'=OUT_OF_ROUND) & (n{_}_stage_seq{seq}'=pre_decided_stage);""" for seq, round, nid in itertools.product(range(log_size), range(max_round), range(num_nodes))]) + """
 
     // Pre-decided """ + ''.join([f"""
     // Success case, directly go to decided 
-    [n{_}_pre_decided_stage_seq{seq}] n{_}_stage_seq{seq}=pre_decided_stage & n{_}_log_ts_seq{seq}!=QUES_VOTE & n{_}_seq+1<LOG_SIZE -> (n{_}_stage_seq{seq}'=decided) & (n{_}_seq'=n{_}_seq+1);
-    [n{_}_pre_decided_stage_seq{seq}] n{_}_stage_seq{seq}=pre_decided_stage & n{_}_log_ts_seq{seq}!=QUES_VOTE & n{_}_seq+1=LOG_SIZE -> true;""" for seq in range(log_size)]) + ''.join([f"""
+    [n{_}_pre_decided_stage_seq{seq}] n{_}_stage_seq{seq}=pre_decided_stage & n{_}_log_ts_seq{seq}!=OUT_OF_ROUND & n{_}_seq+1<LOG_SIZE -> (n{_}_stage_seq{seq}'=decided) & (n{_}_seq'=n{_}_seq+1);
+    [n{_}_pre_decided_stage_seq{seq}] n{_}_stage_seq{seq}=pre_decided_stage & n{_}_log_ts_seq{seq}!=OUT_OF_ROUND & n{_}_seq+1=LOG_SIZE -> (n{_}_stage_seq{seq}'=decided);""" for seq in range(log_size)]) + ''.join([f"""
     // Failed case, put my proposal back to q{qid}
-    [n{_}_pre_decided_stage_seq{seq}_using_q{qid}] n{_}_stage_seq{seq}=pre_decided_stage & n{_}_log_ts_seq{seq}=QUES_VOTE & n{_}_pq_valid_{qid}=false & n{_}_seq+1<LOG_SIZE -> (n{_}_stage_seq{seq}'=decided) & (n{_}_pq_valid_{qid}'=true) & (n{_}_pq_ts_{qid}'=n{_}_proposal_seq{seq}_r0_n{_});
-    [n{_}_pre_decided_stage_seq{seq}_using_q{qid}] n{_}_stage_seq{seq}=pre_decided_stage & n{_}_log_ts_seq{seq}=QUES_VOTE & n{_}_pq_valid_{qid}=false & n{_}_seq+1=LOG_SIZE -> true;""" for seq, qid in itertools.product(range(log_size), range(queue_size))]) + """
+    [n{_}_pre_decided_stage_seq{seq}_using_q{qid}] n{_}_stage_seq{seq}=pre_decided_stage & n{_}_log_ts_seq{seq}=OUT_OF_ROUND & n{_}_pq_valid_{qid}=false & n{_}_seq+1<LOG_SIZE -> (n{_}_stage_seq{seq}'=decided) & (n{_}_pq_valid_{qid}'=true) & (n{_}_pq_ts_{qid}'=n{_}_proposal_seq{seq}_r0_n{_}) & (n{_}_seq'=n{_}_seq+1);
+    [n{_}_pre_decided_stage_seq{seq}_using_q{qid}] n{_}_stage_seq{seq}=pre_decided_stage & n{_}_log_ts_seq{seq}=OUT_OF_ROUND & n{_}_pq_valid_{qid}=false & n{_}_seq+1=LOG_SIZE -> (n{_}_stage_seq{seq}'=decided) & (n{_}_pq_valid_{qid}'=true) & (n{_}_pq_ts_{qid}'=n{_}_proposal_seq{seq}_r0_n{_});""" for seq, qid in itertools.product(range(log_size), range(queue_size))]) + ''.join([f"""
+                                                                                                                                                                                                                                                                           
+    // Receive and process_decided
+    [n{_}_receive_and_process_decided_for_seq{seq}] n{_}_recv_ready=true & n{_}_recv_type=cmd_decided & n{_}_recv_seq={seq} & n{_}_stage_seq{seq}!=decided -> (n{_}_recv_ready'=false) & (n{_}_log_ts_seq{seq}'=n{_}_recv_cmd_ts) & (n{_}_stage_seq{seq}'=decided) & (n{_}_seq'=n{_}_seq+1);
+    [n{_}_receive_and_process_decided_for_seq{seq}] n{_}_recv_ready=true & n{_}_recv_type=cmd_decided & n{_}_recv_seq={seq} & n{_}_stage_seq{seq}=decided  -> (n{_}_recv_ready'=false);""" for seq in range(log_size)]) + """
 
     // Send when a pkt is ready; Recv when a pkt is ready.""" + ''.join([f"""
     [recv_{j}{_}_{bid}] n{_}_recv_ready=false -> \
         (n{_}_recv_ready'=true) & (n{_}_recv_from'={j}) & (n{_}_recv_type'=w{j}{_}_pkt_type_{bid}) & (n{_}_recv_seq'=w{j}{_}_pkt_seq_{bid}) & (n{_}_recv_round'=w{j}{_}_pkt_round_{bid}) & (n{_}_recv_cmd_ts'=w{j}{_}_pkt_cmd_ts_{bid});
-    [send_{_}{j}_{bid}] n{_}_send_ready=true & n{_}_send_is_broadcast=false -> (n{_}_send_ready'=false);""" for bid, j in itertools.product(range(buf_size), range(num_nodes)) if j != _]) + ''.join([f"""
-    [n{_}_send_broadcast] n{_}_send_ready=true & n{_}_send_is_broadcast=true -> (n{_}_send_ready'=false);""" for i in range(buf_size)]) + """
+    [send_{_}{j}_{bid}] n{_}_send_ready=true & n{_}_send_is_broadcast=false -> (n{_}_send_ready'=false);""" for bid, j in itertools.product(range(buf_size), range(num_nodes)) if j != _]) + f"""
+    [n{_}_send_broadcast] n{_}_send_ready=true & n{_}_send_is_broadcast=true -> (n{_}_send_ready'=false);
 
 endmodule
 """
@@ -270,8 +276,10 @@ epilogue_code = """
 rewards "steps"
     true : 1;
 endrewards""" + ''.join([f"""
-label "n{_}_decided_log_seq{i}" = n{_}_log_ts_seq{i} != INVALID;
-label "n{_}_decided_log_seq{i}_non_bot" = n{_}_log_ts_seq{i} != INVALID & n{_}_log_ts_seq{i} != BOT;""" for _, i in itertools.product(range(num_nodes), range(log_size))]) + """
+label "n{_}_decided_log_seq{seq}" = n{_}_log_ts_seq{seq} != INVALID;
+label "n{_}_decided_log_seq{seq}_good_value" = n{_}_log_ts_seq{seq} != INVALID & n{_}_log_ts_seq{seq} != BOT & n{_}_log_ts_seq{seq} != QUES_VOTE & n{_}_log_ts_seq{seq} != OUT_OF_ROUND;""" for seq, _ in itertools.product(range(log_size), range(num_nodes))]) + ''.join([f"""
+label "n{_}_decided_log_seq{seq}_is_out_of_round" = n{_}_log_ts_seq{seq} = OUT_OF_ROUND;""" for seq, _ in itertools.product(range(log_size), range(num_nodes))]) + ''.join([f"""
+label "n{_}_decided_log_seq{seq}_is_ques_vote" = n{_}_log_ts_seq{seq} = QUES_VOTE;""" for seq, _ in itertools.product(range(log_size), range(num_nodes))]) + """
 
 """
 
