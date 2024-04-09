@@ -1,0 +1,40 @@
+
+// raft election algorithm
+
+mdp
+
+const int MAX_TIME = 100;
+const int MAX_TERM = 3;
+const int ELECTION_TIMEOUT = 20;
+const int delay = 3;
+const int ttl = 5;
+
+module m1
+    x: [0..4] init 0;
+
+    [sync] x=0 -> (x'=x+1);
+
+    // [sync] x<3 -> (x'=x+1);
+    // [sync] x=3 -> (x'=x);
+endmodule
+
+module m2
+    y1: [0..4] init 0;
+    y2: [0..4] init 0;
+
+    [sync] y1=3 -> (y1'=y1);
+    // [sync] x<3 & y1<3 & y2<3 -> 0.5:(y1'=y1+1) + 0.5:(y2'=y2+1);
+    // [sync] x<3 & y1<2 & y2<2 -> 0.5:(y1'=y1+2) + 0.5:(y2'=y2+2);
+    // [sync] x=3 | y1=3 | y2=3 -> (y1'=y1) & (y2'=y2);
+
+    // [sync] y1<3 -> (y1'=y1+1);
+    // [sync] y1=3 -> (y1'=y1);
+    // [sync] y2<3 -> (y2'=y2+1);
+    // [sync] y2=3 -> (y2'=y2);
+
+endmodule
+
+// rewards (to calculate expected number of steps)
+rewards "steps"
+    true : 1;
+endrewards
